@@ -940,6 +940,13 @@
             gap: 15px;
         }
         
+        /* 我的账户卡片容器 */
+        .my-account-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 每行两个卡片 */
+            gap: 15px;
+        }
+        
         /* 响应式设计 - 移动端优化 */
         @media (max-width: 1200px) {
             .container {
@@ -1043,6 +1050,11 @@
             .category-btn {
                 justify-content: center;
             }
+            
+            /* 移动端我的账户卡片布局 */
+            .my-account-container {
+                grid-template-columns: 1fr;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1109,7 +1121,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（无滚动条版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（新增我的澳门和我的粤港卡片）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -1235,6 +1247,22 @@
                 </div>
             </div>
             
+            <!-- 大卡片容器 - 我的账户（新增） -->
+            <div class="big-user-card">
+                <div class="big-card-header">
+                    <i class="fas fa-calculator"></i> 我的账户
+                </div>
+                <div class="big-card-content">
+                    <div class="my-account-container" id="myAccountContainer">
+                        <!-- 我的澳门和我的粤港卡片将在这里动态生成 -->
+                        <div class="empty-history">
+                            <i class="fas fa-coins" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                            <p>暂无账户数据</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- 大卡片容器 - 全部汇总 -->
             <div class="big-user-card">
                 <div class="big-card-header">
@@ -1301,6 +1329,7 @@
             updateHistoryDisplay();
             updateUserCardsDisplay();
             updateSummaryDisplay(); // 更新汇总显示
+            updateMyAccountCards(); // 更新我的账户卡片
             initDatePicker(); // 初始化日期选择器为真实当前日期
             populateFilterOptions(); // 填充筛选器选项
             setInitialCategory(); // 设置初始选中的分类按钮
@@ -1659,6 +1688,9 @@
                 
                 // 更新汇总显示
                 updateSummaryDisplay();
+                
+                // 更新我的账户卡片
+                updateMyAccountCards();
                 
                 // 更新筛选器选项
                 populateFilterOptions();
@@ -2113,6 +2145,147 @@
             container.innerHTML = summaryHTML;
         }
         
+        // 更新我的账户卡片（新增）
+        function updateMyAccountCards() {
+            const container = document.getElementById('myAccountContainer');
+            
+            if (historyRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-history">
+                        <i class="fas fa-coins" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>暂无账户数据</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 定义分类
+            const categories = [
+                { id: '澳门上家', name: '澳门上家', icon: 'fas fa-arrow-up', color: '#3498db' },
+                { id: '澳门下家', name: '澳门下家', icon: 'fas fa-arrow-down', color: '#2ecc71' },
+                { id: '粤港上家', name: '粤港上家', icon: 'fas fa-arrow-up', color: '#9b59b6' },
+                { id: '粤港下家', name: '粤港下家', icon: 'fas fa-arrow-down', color: '#f1c40f' }
+            ];
+            
+            // 初始化汇总数据（按分类和奖项）
+            const summaryData = {};
+            categories.forEach(cat => {
+                summaryData[cat.id] = {
+                    count: 0,           // 订单数
+                    totalAmount: 0,     // 订单总额
+                    totalWinning: 0,    // 中奖总金额
+                    totalProfit: 0,     // 盈亏总额
+                    winnings: {}        // 按奖项统计 {奖项名称: 总金额}
+                };
+            });
+            
+            // 汇总数据
+            historyRecords.forEach(record => {
+                const catId = record.category;
+                if (summaryData.hasOwnProperty(catId)) {
+                    const data = record.extractedData;
+                    summaryData[catId].count++;
+                    summaryData[catId].totalAmount += parseFloat(data.totalAmount || 0);
+                    
+                    // 计算中奖总金额
+                    let winningSum = 0;
+                    for (const [type, amount] of Object.entries(data.winnings)) {
+                        const amt = parseFloat(amount || 0);
+                        winningSum += amt;
+                        
+                        // 按奖项统计
+                        if (summaryData[catId].winnings[type]) {
+                            summaryData[catId].winnings[type] += amt;
+                        } else {
+                            summaryData[catId].winnings[type] = amt;
+                        }
+                    }
+                    summaryData[catId].totalWinning += winningSum;
+                    
+                    summaryData[catId].totalProfit += parseFloat(data.profitLoss || 0);
+                }
+            });
+            
+            // 计算我的澳门（澳门下家 - 澳门上家）
+            const myMacau = {
+                count: summaryData['澳门下家'].count - summaryData['澳门上家'].count,
+                totalAmount: summaryData['澳门下家'].totalAmount - summaryData['澳门上家'].totalAmount,
+                totalWinning: summaryData['澳门下家'].totalWinning - summaryData['澳门上家'].totalWinning,
+                totalProfit: summaryData['澳门下家'].totalProfit - summaryData['澳门上家'].totalProfit,
+                winnings: {}
+            };
+            
+            // 计算我的粤港（粤港下家 - 粤港上家）
+            const myGuangdong = {
+                count: summaryData['粤港下家'].count - summaryData['粤港上家'].count,
+                totalAmount: summaryData['粤港下家'].totalAmount - summaryData['粤港上家'].totalAmount,
+                totalWinning: summaryData['粤港下家'].totalWinning - summaryData['粤港上家'].totalWinning,
+                totalProfit: summaryData['粤港下家'].totalProfit - summaryData['粤港上家'].totalProfit,
+                winnings: {}
+            };
+            
+            // 生成我的账户卡片HTML
+            let accountHTML = `
+                <!-- 我的澳门卡片 -->
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <i class="fas fa-arrow-down" style="color: #2ecc71;"></i>
+                        <div class="summary-title">我的澳门</div>
+                    </div>
+                    <table class="summary-table">
+                        <tr>
+                            <th>订单总数</th>
+                            <td class="summary-value">${myMacau.count}</td>
+                        </tr>
+                        <tr>
+                            <th>订单总额</th>
+                            <td class="summary-value">${myMacau.totalAmount.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <th>中奖总金额</th>
+                            <td class="summary-value">${myMacau.totalWinning.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <th>盈亏总额</th>
+                            <td class="summary-value ${myMacau.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative'}">
+                                ${myMacau.totalProfit >= 0 ? '+' : ''}${myMacau.totalProfit.toFixed(2)}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- 我的粤港卡片 -->
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <i class="fas fa-arrow-down" style="color: #f1c40f;"></i>
+                        <div class="summary-title">我的粤港</div>
+                    </div>
+                    <table class="summary-table">
+                        <tr>
+                            <th>订单总数</th>
+                            <td class="summary-value">${myGuangdong.count}</td>
+                        </tr>
+                        <tr>
+                            <th>订单总额</th>
+                            <td class="summary-value">${myGuangdong.totalAmount.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <th>中奖总金额</th>
+                            <td class="summary-value">${myGuangdong.totalWinning.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <th>盈亏总额</th>
+                            <td class="summary-value ${myGuangdong.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative'}">
+                                ${myGuangdong.totalProfit >= 0 ? '+' : ''}${myGuangdong.totalProfit.toFixed(2)}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = accountHTML;
+        }
+        
         // 获取分类对应的CSS类
         function getCategoryClass(category) {
             switch(category) {
@@ -2177,6 +2350,7 @@
             updateHistoryDisplay();
             updateUserCardsDisplay();
             updateSummaryDisplay(); // 更新汇总显示
+            updateMyAccountCards(); // 更新我的账户卡片
             populateFilterOptions(); // 更新筛选器选项
             hideClearConfirm();
             
@@ -2196,6 +2370,7 @@
             updateHistoryDisplay();
             updateUserCardsDisplay();
             updateSummaryDisplay(); // 更新汇总显示
+            updateMyAccountCards(); // 更新我的账户卡片
             populateFilterOptions(); // 更新筛选器选项
             document.getElementById('orderData').value = '';
             // 重置日期选择器为真实当前日期
