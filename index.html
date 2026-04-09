@@ -21,7 +21,7 @@
         }
         
         .container {
-            max-width: 1600px;
+            max-width: 1700px;
             width: 100%;
             margin: 0 auto;
             display: flex;
@@ -36,13 +36,12 @@
         
         /* 右侧侧边栏 - 大卡片 */
         .user-sidebar {
-            width: 420px;
+            width: 530px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             padding: 15px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            /* 移除滚动条 */
         }
         
         .sidebar-title {
@@ -581,7 +580,7 @@
             margin-bottom: 12px;
             border: 1px solid #e1e8f0;
             transition: all 0.3s ease;
-            width: calc(50% - 8px); /* 每行两个卡片 */
+            width: calc(33.333% - 10px); /* 三列布局 */
             min-width: 0;
         }
         
@@ -836,11 +835,11 @@
             color: white;
         }
         
-        /* 汇总卡片样式 */
+        /* 汇总卡片样式 - 三列布局 */
         .summary-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 每行两个卡片 */
-            gap: 15px;
+            grid-template-columns: repeat(3, 1fr); /* 三列布局 */
+            gap: 12px;
         }
         
         .summary-card {
@@ -940,18 +939,18 @@
             color: #e74c3c;
         }
         
-        /* 用户卡片容器布局 */
+        /* 用户卡片容器布局 - 三列 */
         #userCardsContainer {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
         }
         
-        /* 我的账户卡片容器 */
+        /* 我的账户卡片容器 - 三列布局 */
         .my-account-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 每行两个卡片 */
-            gap: 15px;
+            grid-template-columns: repeat(3, 1fr); /* 三列布局 */
+            gap: 12px;
         }
         
         /* 历史记录日期选择器 */
@@ -983,13 +982,27 @@
         }
         
         /* 响应式设计 - 移动端优化 */
-        @media (max-width: 1200px) {
+        @media (max-width: 1400px) {
             .container {
                 flex-direction: column;
             }
             
             .user-sidebar {
                 width: 100%;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .summary-container {
+                grid-template-columns: repeat(2, 1fr); /* 中等屏幕两列 */
+            }
+            
+            .my-account-container {
+                grid-template-columns: repeat(2, 1fr); /* 中等屏幕两列 */
+            }
+            
+            .user-card {
+                width: calc(50% - 8px); /* 中等屏幕两列 */
             }
         }
         
@@ -1068,7 +1081,15 @@
             }
             
             .summary-container {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr; /* 移动端单列 */
+            }
+            
+            .my-account-container {
+                grid-template-columns: 1fr; /* 移动端单列 */
+            }
+            
+            .user-card {
+                width: 100%; /* 移动端单列 */
             }
             
             /* 移动端用户卡片布局 */
@@ -1083,11 +1104,6 @@
             
             .category-btn {
                 justify-content: center;
-            }
-            
-            /* 移动端我的账户卡片布局 */
-            .my-account-container {
-                grid-template-columns: 1fr;
             }
             
             .history-controls {
@@ -1160,7 +1176,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（优化版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（三列布局优化版）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -1993,6 +2009,12 @@
             
             // 应用筛选条件
             let filteredRecords = historyRecords.filter(record => {
+                // 搜索框筛选（用户、日期、分类）
+                const matchesSearch = 
+                    record.applicant.toLowerCase().includes(searchInput) ||
+                    record.timestamp.includes(searchInput) ||
+                    record.category.toLowerCase().includes(searchInput);
+                
                 // 日期筛选
                 const matchesDate = dateFilter ? record.timestamp === dateFilter : true;
                 
@@ -2002,7 +2024,7 @@
                 // 用户筛选
                 const matchesUser = userFilter ? record.applicant === userFilter : true;
                 
-                return matchesDate && matchesCategory && matchesUser;
+                return matchesSearch && matchesDate && matchesCategory && matchesUser;
             });
             
             if (filteredRecords.length === 0) {
