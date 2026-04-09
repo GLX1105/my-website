@@ -42,8 +42,7 @@
             padding: 15px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
+            /* 移除滚动条 */
         }
         
         .sidebar-title {
@@ -89,7 +88,7 @@
             background: white;
             border-radius: 8px;
             padding: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
@@ -457,6 +456,7 @@
             margin-bottom: 15px;
             flex-wrap: wrap;
             gap: 10px;
+            align-items: center;
         }
         
         .history-container {
@@ -954,6 +954,34 @@
             gap: 15px;
         }
         
+        /* 历史记录日期选择器 */
+        .history-date-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .history-date-selector label {
+            margin-bottom: 0;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .history-date-input {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            color: #333;
+            cursor: pointer;
+        }
+        
         /* 响应式设计 - 移动端优化 */
         @media (max-width: 1200px) {
             .container {
@@ -962,7 +990,6 @@
             
             .user-sidebar {
                 width: 100%;
-                max-height: none;
             }
         }
         
@@ -1062,6 +1089,11 @@
             .my-account-container {
                 grid-template-columns: 1fr;
             }
+            
+            .history-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1128,7 +1160,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（去除订单总数和中奖总金额）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（优化版）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -1189,6 +1221,12 @@
             <div class="history-section">
                 <div class="history-controls">
                     <h2 class="section-title"><i class="fas fa-history"></i> 历史记录 <span class="counter" id="recordCounter">0</span></h2>
+                    <div class="history-date-selector">
+                        <label for="historyDateFilter">
+                            <i class="fas fa-calendar-day"></i> 选择日期：
+                        </label>
+                        <input type="date" id="historyDateFilter" class="history-date-input">
+                    </div>
                 </div>
                 <div class="history-container" id="historyContainer">
                     <div class="empty-history">
@@ -1199,13 +1237,9 @@
             </div>
         </div>
         
-        <!-- 右侧侧边栏 - 大卡片 -->
+        <!-- 右侧侧边栏 - 独立组件 -->
         <div class="user-sidebar">
-            <div class="sidebar-title">
-                <i class="fas fa-users"></i> 用户卡片汇总
-            </div>
-            
-            <!-- 紧凑搜索和筛选区域 -->
+            <!-- 1. 筛选框组件 -->
             <div class="search-filter-section">
                 <div class="search-box">
                     <input type="text" id="searchInput" class="search-input" placeholder="搜索用户、日期或分类...">
@@ -1240,7 +1274,7 @@
                 </div>
             </div>
             
-            <!-- 大卡片容器 - 用户卡片汇总 -->
+            <!-- 2. 用户信息和中奖情况卡片 -->
             <div class="big-user-card">
                 <div class="big-card-header">
                     <i class="fas fa-user-circle"></i> 用户信息和中奖情况
@@ -1254,7 +1288,21 @@
                 </div>
             </div>
             
-            <!-- 大卡片容器 - 我的账户（新增） -->
+            <!-- 3. 全部汇总卡片 -->
+            <div class="big-user-card">
+                <div class="big-card-header">
+                    <i class="fas fa-chart-bar"></i> 全部汇总
+                </div>
+                <div class="big-card-content" id="summaryContainer">
+                    <!-- 汇总卡片将在这里动态生成 -->
+                    <div class="empty-history">
+                        <i class="fas fa-chart-pie" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>暂无汇总数据</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 4. 我的账户卡片 -->
             <div class="big-user-card">
                 <div class="big-card-header">
                     <i class="fas fa-calculator"></i> 我的账户
@@ -1266,20 +1314,6 @@
                             <i class="fas fa-coins" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
                             <p>暂无账户数据</p>
                         </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 大卡片容器 - 全部汇总 -->
-            <div class="big-user-card">
-                <div class="big-card-header">
-                    <i class="fas fa-chart-bar"></i> 全部汇总
-                </div>
-                <div class="big-card-content" id="summaryContainer">
-                    <!-- 汇总卡片将在这里动态生成 -->
-                    <div class="empty-history">
-                        <i class="fas fa-chart-pie" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
-                        <p>暂无汇总数据</p>
                     </div>
                 </div>
             </div>
@@ -1333,14 +1367,46 @@
         // 页面加载时从localStorage读取历史记录并设置日期选择器默认值（真实当前日期）
         window.onload = function() {
             loadFromLocalStorage();
+            initDatePickers(); // 初始化所有日期选择器
             updateHistoryDisplay();
             updateUserCardsDisplay();
             updateSummaryDisplay(); // 更新汇总显示
             updateMyAccountCards(); // 更新我的账户卡片
-            initDatePicker(); // 初始化日期选择器为真实当前日期
             populateFilterOptions(); // 填充筛选器选项
             setInitialCategory(); // 设置初始选中的分类按钮
         };
+        
+        // 初始化所有日期选择器
+        function initDatePickers() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const today = `${year}-${month}-${day}`;
+            
+            // 设置报表日期选择器为今天
+            const reportDate = document.getElementById('reportDate');
+            reportDate.value = today;
+            reportDate.min = '2020-01-01';
+            reportDate.max = '2030-12-31';
+            
+            // 设置筛选日期选择器
+            const dateFilter = document.getElementById('dateFilter');
+            dateFilter.value = '';
+            dateFilter.min = '2020-01-01';
+            dateFilter.max = '2030-12-31';
+            
+            // 设置历史记录日期选择器
+            const historyDateFilter = document.getElementById('historyDateFilter');
+            historyDateFilter.value = today;
+            historyDateFilter.min = '2020-01-01';
+            historyDateFilter.max = '2030-12-31';
+            
+            // 设置事件监听器
+            historyDateFilter.addEventListener('change', function() {
+                updateHistoryDisplay();
+            });
+        }
         
         // 设置初始选中的分类按钮
         function setInitialCategory() {
@@ -1352,31 +1418,6 @@
                     btn.classList.remove('active');
                 }
             });
-        }
-        
-        // 初始化日期选择器（设置为真实当前日期）
-        function initDatePicker() {
-            const dateInput = document.getElementById('reportDate');
-            const filterDateInput = document.getElementById('dateFilter');
-            
-            // 获取真实当前日期（本地时区）
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const today = `${year}-${month}-${day}`;
-            
-            // 设置报表日期选择器为今天
-            dateInput.value = today;
-            dateInput.min = '2020-01-01'; // 设置最早可选日期
-            dateInput.max = '2030-12-31'; // 设置最晚可选日期
-            
-            // 设置筛选日期选择器（不设置默认值）
-            filterDateInput.value = '';
-            filterDateInput.min = '2020-01-01';
-            filterDateInput.max = '2030-12-31';
-            
-            console.log("初始化日期选择器为真实当前日期:", today);
         }
         
         // 选择分类
@@ -1722,6 +1763,8 @@
         // 应用筛选条件
         function applyFilters() {
             updateUserCardsDisplay();
+            updateSummaryDisplay();
+            updateMyAccountCards();
         }
         
         // 创建动态表格HTML（已移除申报人显示）
@@ -1873,25 +1916,33 @@
             return numbers;
         }
         
-        // 更新历史记录显示
+        // 更新历史记录显示（根据选择的日期）
         function updateHistoryDisplay() {
             const historyContainer = document.getElementById('historyContainer');
             const recordCounter = document.getElementById('recordCounter');
+            const historyDateFilter = document.getElementById('historyDateFilter');
+            const selectedDate = historyDateFilter.value;
             
-            recordCounter.textContent = historyRecords.length;
+            // 根据选择的日期过滤记录
+            let filteredRecords = historyRecords;
+            if (selectedDate) {
+                filteredRecords = historyRecords.filter(record => record.timestamp === selectedDate);
+            }
             
-            if (historyRecords.length === 0) {
+            recordCounter.textContent = filteredRecords.length;
+            
+            if (filteredRecords.length === 0) {
                 historyContainer.innerHTML = `
                     <div class="empty-history">
                         <i class="fas fa-clock" style="font-size: 2.5rem; margin-bottom: 10px; color: #bdc3c7;"></i>
-                        <p>暂无历史记录，请先录入并保存订单数据</p>
+                        <p>${selectedDate ? '该日期无历史记录' : '暂无历史记录，请先录入并保存订单数据'}</p>
                     </div>
                 `;
                 return;
             }
             
             let historyHTML = '';
-            historyRecords.forEach((record, index) => {
+            filteredRecords.forEach((record, index) => {
                 historyHTML += `
                     <div class="history-card">
                         <div class="history-header">
@@ -1942,12 +1993,6 @@
             
             // 应用筛选条件
             let filteredRecords = historyRecords.filter(record => {
-                // 搜索框筛选（用户、日期、分类）
-                const matchesSearch = 
-                    record.applicant.toLowerCase().includes(searchInput) ||
-                    record.timestamp.includes(searchInput) ||
-                    record.category.toLowerCase().includes(searchInput);
-                
                 // 日期筛选
                 const matchesDate = dateFilter ? record.timestamp === dateFilter : true;
                 
@@ -1957,7 +2002,7 @@
                 // 用户筛选
                 const matchesUser = userFilter ? record.applicant === userFilter : true;
                 
-                return matchesSearch && matchesDate && matchesCategory && matchesUser;
+                return matchesDate && matchesCategory && matchesUser;
             });
             
             if (filteredRecords.length === 0) {
@@ -2022,9 +2067,10 @@
             container.innerHTML = cardsHTML;
         }
         
-        // 更新汇总显示（按分类统计中奖情况）- 已去除订单总数和中奖总金额
+        // 更新汇总显示（按分类统计中奖情况）- 根据日期筛选
         function updateSummaryDisplay() {
             const container = document.getElementById('summaryContainer');
+            const dateFilter = document.getElementById('dateFilter').value;
             
             if (historyRecords.length === 0) {
                 container.innerHTML = `
@@ -2034,6 +2080,12 @@
                     </div>
                 `;
                 return;
+            }
+            
+            // 根据日期筛选记录
+            let filteredRecords = historyRecords;
+            if (dateFilter) {
+                filteredRecords = historyRecords.filter(record => record.timestamp === dateFilter);
             }
             
             // 定义分类
@@ -2056,7 +2108,7 @@
             });
             
             // 汇总数据
-            historyRecords.forEach(record => {
+            filteredRecords.forEach(record => {
                 const catId = record.category;
                 if (summaryData.hasOwnProperty(catId)) {
                     const data = record.extractedData;
@@ -2144,9 +2196,10 @@
             container.innerHTML = summaryHTML;
         }
         
-        // 更新我的账户卡片（按奖项类型计算差额）- 已去除订单总数和中奖总金额
+        // 更新我的账户卡片（按奖项类型计算差额）- 根据日期筛选
         function updateMyAccountCards() {
             const container = document.getElementById('myAccountContainer');
+            const dateFilter = document.getElementById('dateFilter').value;
             
             if (historyRecords.length === 0) {
                 container.innerHTML = `
@@ -2156,6 +2209,12 @@
                     </div>
                 `;
                 return;
+            }
+            
+            // 根据日期筛选记录
+            let filteredRecords = historyRecords;
+            if (dateFilter) {
+                filteredRecords = historyRecords.filter(record => record.timestamp === dateFilter);
             }
             
             // 定义分类
@@ -2178,7 +2237,7 @@
             });
             
             // 汇总数据
-            historyRecords.forEach(record => {
+            filteredRecords.forEach(record => {
                 const catId = record.category;
                 if (summaryData.hasOwnProperty(catId)) {
                     const data = record.extractedData;
@@ -2205,41 +2264,41 @@
             
             // 计算我的澳门（澳门下家 - 澳门上家）- 按奖项类型逐项相减
             const myMacau = {
-                totalAmount: summaryData['澳门下家'].totalAmount - summaryData['澳门上家'].totalAmount,
-                totalWinning: summaryData['澳门下家'].totalWinning - summaryData['澳门上家'].totalWinning,
-                totalProfit: summaryData['澳门下家'].totalProfit - summaryData['澳门上家'].totalProfit,
+                totalAmount: (summaryData['澳门下家']?.totalAmount || 0) - (summaryData['澳门上家']?.totalAmount || 0),
+                totalWinning: (summaryData['澳门下家']?.totalWinning || 0) - (summaryData['澳门上家']?.totalWinning || 0),
+                totalProfit: (summaryData['澳门下家']?.totalProfit || 0) - (summaryData['澳门上家']?.totalProfit || 0),
                 winnings: {}
             };
             
             // 逐项相减中奖金额
             const allAwardTypes = new Set([
-                ...Object.keys(summaryData['澳门下家'].winnings),
-                ...Object.keys(summaryData['澳门上家'].winnings)
+                ...Object.keys(summaryData['澳门下家']?.winnings || {}),
+                ...Object.keys(summaryData['澳门上家']?.winnings || {})
             ]);
             
             allAwardTypes.forEach(type => {
-                const downAmount = summaryData['澳门下家'].winnings[type] || 0;
-                const upAmount = summaryData['澳门上家'].winnings[type] || 0;
+                const downAmount = summaryData['澳门下家']?.winnings[type] || 0;
+                const upAmount = summaryData['澳门上家']?.winnings[type] || 0;
                 myMacau.winnings[type] = downAmount - upAmount;
             });
             
             // 计算我的粤港（粤港下家 - 粤港上家）- 按奖项类型逐项相减
             const myGuangdong = {
-                totalAmount: summaryData['粤港下家'].totalAmount - summaryData['粤港上家'].totalAmount,
-                totalWinning: summaryData['粤港下家'].totalWinning - summaryData['粤港上家'].totalWinning,
-                totalProfit: summaryData['粤港下家'].totalProfit - summaryData['粤港上家'].totalProfit,
+                totalAmount: (summaryData['粤港下家']?.totalAmount || 0) - (summaryData['粤港上家']?.totalAmount || 0),
+                totalWinning: (summaryData['粤港下家']?.totalWinning || 0) - (summaryData['粤港上家']?.totalWinning || 0),
+                totalProfit: (summaryData['粤港下家']?.totalProfit || 0) - (summaryData['粤港上家']?.totalProfit || 0),
                 winnings: {}
             };
             
             // 逐项相减中奖金额
             const allAwardTypesGD = new Set([
-                ...Object.keys(summaryData['粤港下家'].winnings),
-                ...Object.keys(summaryData['粤港上家'].winnings)
+                ...Object.keys(summaryData['粤港下家']?.winnings || {}),
+                ...Object.keys(summaryData['粤港上家']?.winnings || {})
             ]);
             
             allAwardTypesGD.forEach(type => {
-                const downAmount = summaryData['粤港下家'].winnings[type] || 0;
-                const upAmount = summaryData['粤港上家'].winnings[type] || 0;
+                const downAmount = summaryData['粤港下家']?.winnings[type] || 0;
+                const upAmount = summaryData['粤港上家']?.winnings[type] || 0;
                 myGuangdong.winnings[type] = downAmount - upAmount;
             });
             
@@ -2435,7 +2494,7 @@
             populateFilterOptions(); // 更新筛选器选项
             document.getElementById('orderData').value = '';
             // 重置日期选择器为真实当前日期
-            initDatePicker();
+            initDatePickers();
             hideClearConfirm();
             
             // 显示成功消息
