@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单报表系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: #333;
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+        }
+        
+        /* 左侧主内容区 - 历史记录 */
+        .main-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        /* 右侧侧边栏 - 大卡片 */
+        .user-sidebar {
+            width: 420px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .sidebar-title {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* 大卡片容器 */
+        .big-user-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .big-card-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .big-card-content {
+            padding: 15px;
+            max-height: none;
+            overflow-y: visible;
+        }
+        
+        /* 紧凑搜索和筛选区域 */
+        .search-filter-section {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-box {
+            display: flex;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .search-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.85rem;
+        }
+        
+        .search-btn:hover {
+            background: #2980b9;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .filter-label {
+            font-size: 0.75rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .filter-select, .filter-date {
+            padding: 5px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            background: white;
+            min-width: 100px;
+        }
+        
+        .filter-date {
+            width: 120px;
+        }
+        
+        /* 紧凑导航栏样式 */
+        .navbar {
+            background: linear-gradient(90deg, #1a3a6c, #2c5aa0);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            padding: 8px 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .navbar-brand i {
+            font-size: 1.2rem;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.18);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.28);
+            transform: translateY(-1px);
+        }
+        
+        header {
+            text-align: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        
+        header h1 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            color: #ecf0f1;
+            font-size: 0.95rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        
+        .input-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title i {
+            color: #3498db;
+            font-size: 1.1rem;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        /* 紧凑日期选择器样式 */
+        .date-selector-container {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .date-selector-container label {
+            margin-bottom: 0;
+            color: white;
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .date-input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .date-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+        }
+        
+        /* 分类按钮组样式 */
+        .category-button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        
+        .category-btn {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            color: #555;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .category-btn:hover {
+            border-color: #3498db;
+            color: #3498db;
+            transform: translateY(-1px);
+        }
+        
+        .category-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+        }
+        
+        .category-btn i {
+            font-size: 0.8rem;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to right, #2980b9, #2573a7);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            box-shadow: 0 2px 6px rgba(46, 204, 113, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(to right, #27ae60, #219653);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(46, 204, 113, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(to right, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.4);
+        }
+        
+        .message {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 12px 0;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+            font-size: 0.9rem;
+        }
+        
+        .success {
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+            border: 1px solid #2ecc71;
+        }
+        
+        .error {
+            background: rgba(231, 76, 60, 0.15);
+            color: #c0392b;
+            border: 1px solid #e74c3c;
+        }
+        
+        .history-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            padding: 18px;
+            margin-top: 20px;
+        }
+        
+        .history-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .history-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .history-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            transition: transform 0.2s ease;
+            min-width: 0;
+            position: relative;
+        }
+        
+        .history-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .history-header {
+            background: linear-gradient(90deg, #1a3a6c, #2c5aa0);
+            color: white;
+            padding: 10px 12px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .history-time {
+            font-size: 0.75rem;
+            opacity: 0.85;
+        }
+        
+        .delete-btn {
+            background: rgba(231, 76, 60, 0.3);
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .delete-btn:hover {
+            background: rgba(231, 76, 60, 0.8);
+            transform: scale(1.1);
+        }
+        
+        .history-body {
+            padding: 12px;
+        }
+        
+        .history-content {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            min-width: 0;
+        }
+        
+        .compensation-card {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+            padding: 10px;
+            margin-top: 8px;
+            border: 1px solid #e1e8f0;
+        }
+        
+        .compensation-header {
+            background: #f1f6fd;
+            color: #2c3e50;
+            padding: 6px 8px;
+            font-weight: 600;
+            border-bottom: 1px solid #e1e8f0;
+            font-size: 0.85rem;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .compensation-content {
+            padding: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.4;
+            font-size: 0.8rem;
+        }
+        
+        /* 赔付金额高亮样式 */
+        .compensation-amount {
+            color: #e74c3c; /* 红色 */
+            font-weight: bold;
+        }
+        
+        /* 盈亏情况高亮样式 */
+        .profit-positive {
+            color: #27ae60; /* 绿色 */
+            font-weight: bold;
+        }
+        
+        .profit-negative {
+            color: #e74c3c; /* 红色 */
+            font-weight: bold;
+        }
+        
+        /* 用户卡片样式（大卡片内的独立卡片） */
+        .user-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #e1e8f0;
+            transition: all 0.3s ease;
+            width: calc(50% - 8px); /* 每行两个卡片 */
+            min-width: 0;
+        }
+        
+        .user-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .user-info-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+        
+        .user-category {
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .user-date {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            white-space: nowrap;
+        }
+        
+        .user-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            font-size: 0.85rem;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #2980b9;
+        }
+        
+        .winning-section {
+            margin-top: 8px;
+        }
+        
+        .winning-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .winning-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            font-size: 0.8rem;
+        }
+        
+        .winning-type {
+            color: #555;
+        }
+        
+        .winning-amount {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .profit-loss {
+            font-weight: 600;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            margin-top: 6px;
+            text-align: right;
+        }
+        
+        /* 动态表格样式 - 已移除申报人显示 */
+        .dynamic-table-container {
+            margin-top: 10px;
+            width: 100%;
+            overflow: auto;
+        }
+        
+        .dynamic-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            table-layout: fixed;
+            border: 1px solid #e1e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .dynamic-table th, .dynamic-table td {
+            border: 1px solid #e1e8f0;
+            padding: 6px 4px;
+            text-align: center;
+            word-break: break-all;
+        }
+        
+        .dynamic-table th {
+            background: #f1f6fd;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+        }
+        
+        .dynamic-table tr:nth-child(even) {
+            background-color: #f8fafd;
+        }
+        
+        .serial-number {
+            color: #2980b9;
+            font-weight: 600;
+        }
+        
+        .empty-history {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        .counter {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            margin-left: 5px;
+        }
+        
+        /* 分类标签样式 */
+        .category-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .category-macau-up {
+            background: rgba(52, 152, 219, 0.2);
+            color: #2980b9;
+        }
+        
+        .category-macau-down {
+            background: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+        
+        .category-guangdong-up {
+            background: rgba(155, 89, 182, 0.2);
+            color: #8e44ad;
+        }
+        
+        .category-guangdong-down {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f39c12;
+        }
+        
+        /* 文件输入隐藏 */
+        .file-input {
+            display: none;
+        }
+        
+        /* 确认对话框样式 */
+        .confirm-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .confirm-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .confirm-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .confirm-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .confirm-yes {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .confirm-no {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .confirm-cancel {
+            background: #3498db;
+            color: white;
+        }
+        
+        /* 汇总卡片样式 */
+        .summary-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 每行两个卡片 */
+            gap: 15px;
+        }
+        
+        .summary-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            padding: 12px;
+            border: 1px solid #e1e8f0;
+        }
+        
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        
+        .summary-table th, .summary-table td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-table th {
+            background: #f1f6fd;
+            font-weight: 600;
+            color: #2c3e50;
+            width: 60%;
+        }
+        
+        .summary-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .summary-value {
+            font-weight: 600;
+            color: #2980b9;
+        }
+        
+        .summary-profit-positive {
+            color: #27ae60;
+        }
+        
+        .summary-profit-negative {
+            color: #e74c3c;
+        }
+        
+        /* 中奖情况统计样式 */
+        .winning-summary {
+            margin-top: 8px;
+        }
+        
+        .winning-summary-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .winning-summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            font-size: 0.8rem;
+        }
+        
+        .winning-summary-type {
+            color: #555;
+        }
+        
+        .winning-summary-amount {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        /* 用户卡片容器布局 */
+        #userCardsContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        /* 响应式设计 - 移动端优化 */
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .user-sidebar {
+                width: 100%;
+                max-height: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .navbar {
+                flex-direction: column;
+                text-align: center;
+                padding: 10px;
+            }
+            
+            .nav-buttons {
+                justify-content: center;
+                margin-top: 5px;
+            }
+            
+            .history-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .dynamic-table {
+                font-size: 0.75rem;
+            }
+            
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .category-group {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            /* 移动端表格优化 */
+            .dynamic-table-container {
+                overflow-x: auto;
+            }
+            
+            .dynamic-table th, .dynamic-table td {
+                padding: 4px 2px;
+                font-size: 0.7rem;
+            }
+            
+            .date-selector-container {
+                flex-direction: column;
+                gap: 6px;
+                padding: 8px;
+            }
+            
+            .date-input {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .confirm-content {
+                max-width: 350px;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+                gap: 6px;
+            }
+            
+            .filter-item {
+                flex-direction: row;
+                align-items: center;
+                gap: 4px;
+            }
+            
+            .summary-container {
+                grid-template-columns: 1fr;
+            }
+            
+            /* 移动端用户卡片布局 */
+            .user-card {
+                width: 100%;
+            }
+            
+            /* 移动端分类按钮 */
+            .category-button-group {
+                flex-direction: column;
+            }
+            
+            .category-btn {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* 超小屏幕优化 */
+            .dynamic-table {
+                font-size: 0.65rem;
+            }
+            
+            .dynamic-table th, .dynamic-table td {
+                padding: 3px 1px;
+            }
+            
+            .date-selector-container {
+                font-size: 0.8rem;
+                padding: 6px;
+            }
+            
+            .date-input {
+                font-size: 0.8rem;
+                padding: 4px 6px;
+            }
+            
+            .confirm-content {
+                padding: 15px;
+            }
+            
+            .confirm-buttons {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .filter-select, .filter-date {
+                min-width: 80px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧主内容区 -->
+        <div class="main-content">
+            <!-- 紧凑导航栏 -->
+            <div class="navbar">
+                <div class="navbar-brand">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>订单报表系统</span>
+                </div>
+                <div class="nav-buttons">
+                    <button class="nav-btn" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-file-import"></i> 导入
+                    </button>
+                    <button class="nav-btn" onclick="exportAllRecords()">
+                        <i class="fas fa-file-export"></i> 导出
+                    </button>
+                    <button class="nav-btn" onclick="showClearConfirm()">
+                        <i class="fas fa-trash-alt"></i> 清空
+                    </button>
+                </div>
+            </div>
+            
+            <header>
+                <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
+                <p>录入订单数据，系统自动识别所有中奖类型（无滚动条版）</p>
+            </header>
+            
+            <!-- 数据录入区 -->
+            <div class="input-section">
+                <h2 class="section-title"><i class="fas fa-edit"></i> 数据录入</h2>
+                
+                <!-- 紧凑日期选择器 -->
+                <div class="date-selector-container">
+                    <label for="reportDate">
+                        <i class="fas fa-calendar-alt"></i> 报表日期：
+                    </label>
+                    <input type="date" id="reportDate" class="date-input">
+                </div>
+                
+                <div class="input-group">
+                    <label for="orderData">订单数据录入</label>
+                    <textarea id="orderData" placeholder="" style="color: #999; font-style: italic;" 
+                        title="请输入订单数据，格式如：申报人：XXX&#10;订单金额明细：...&#10;中奖情况：...&#10;盈亏情况：..."></textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label>分类</label>
+                    <div class="category-button-group">
+                        <button class="category-btn" data-category="澳门上家" onclick="selectCategory(this, '澳门上家')">
+                            <i class="fas fa-arrow-up"></i> 澳门上家
+                        </button>
+                        <button class="category-btn active" data-category="澳门下家" onclick="selectCategory(this, '澳门下家')">
+                            <i class="fas fa-arrow-down"></i> 澳门下家
+                        </button>
+                        <button class="category-btn" data-category="粤港上家" onclick="selectCategory(this, '粤港上家')">
+                            <i class="fas fa-arrow-up"></i> 粤港上家
+                        </button>
+                        <button class="category-btn" data-category="粤港下家" onclick="selectCategory(this, '粤港下家')">
+                            <i class="fas fa-arrow-down"></i> 粤港下家
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="message success" id="successMsg">
+                    <i class="fas fa-check-circle"></i> 报表已成功保存！
+                </div>
+                
+                <div class="message error" id="errorMsg">
+                    <i class="fas fa-exclamation-circle"></i> 未找到"订单金额明细："或"="，请按格式输入！
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="saveRecord()">
+                        <i class="fas fa-save"></i> 保存报表
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearInput()">
+                        <i class="fas fa-broom"></i> 清空输入
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 历史记录区 -->
+            <div class="history-section">
+                <div class="history-controls">
+                    <h2 class="section-title"><i class="fas fa-history"></i> 历史记录 <span class="counter" id="recordCounter">0</span></h2>
+                </div>
+                <div class="history-container" id="historyContainer">
+                    <div class="empty-history">
+                        <i class="fas fa-clock" style="font-size: 2.5rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>暂无历史记录，请先录入并保存订单数据</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧侧边栏 - 大卡片 -->
+        <div class="user-sidebar">
+            <div class="sidebar-title">
+                <i class="fas fa-users"></i> 用户卡片汇总
+            </div>
+            
+            <!-- 紧凑搜索和筛选区域 -->
+            <div class="search-filter-section">
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="search-input" placeholder="搜索用户、日期或分类...">
+                    <button class="search-btn" onclick="applyFilters()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                
+                <div class="filter-group">
+                    <div class="filter-item">
+                        <label class="filter-label">日期</label>
+                        <input type="date" id="dateFilter" class="filter-date" onchange="applyFilters()">
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label class="filter-label">分类</label>
+                        <select id="categoryFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">所有分类</option>
+                            <option value="澳门上家">澳门上家</option>
+                            <option value="澳门下家">澳门下家</option>
+                            <option value="粤港上家">粤港上家</option>
+                            <option value="粤港下家">粤港下家</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label class="filter-label">用户</label>
+                        <select id="userFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">所有用户</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 大卡片容器 - 用户卡片汇总 -->
+            <div class="big-user-card">
+                <div class="big-card-header">
+                    <i class="fas fa-user-circle"></i> 用户信息和中奖情况
+                </div>
+                <div class="big-card-content" id="userCardsContainer">
+                    <!-- 用户卡片将在这里动态生成 -->
+                    <div class="empty-history">
+                        <i class="fas fa-user-friends" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>暂无用户数据</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 大卡片容器 - 全部汇总 -->
+            <div class="big-user-card">
+                <div class="big-card-header">
+                    <i class="fas fa-chart-bar"></i> 全部汇总
+                </div>
+                <div class="big-card-content" id="summaryContainer">
+                    <!-- 汇总卡片将在这里动态生成 -->
+                    <div class="empty-history">
+                        <i class="fas fa-chart-pie" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>暂无汇总数据</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 隐藏的文件输入 -->
+    <input type="file" id="fileInput" class="file-input" accept=".txt,.csv" onchange="importData(event)">
+    
+    <!-- 确认对话框 -->
+    <div class="confirm-dialog" id="confirmDialog">
+        <div class="confirm-content">
+            <h3 id="confirmTitle">确认清空数据</h3>
+            <p id="confirmMessage">确定要清空所有历史记录和当前数据吗？</p>
+            <div class="confirm-buttons">
+                <button class="confirm-btn confirm-yes" id="confirmYesBtn">确定</button>
+                <button class="confirm-btn confirm-no" onclick="hideClearConfirm()">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 重复警告对话框 -->
+    <div class="confirm-dialog" id="duplicateDialog">
+        <div class="confirm-content">
+            <div class="warning-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>发现重复录入</h3>
+            <p id="duplicateMessage">检测到相同日期、相同申报人的相似订单记录。</p>
+            <div class="confirm-buttons">
+                <button class="confirm-btn confirm-yes" onclick="forceSaveRecord()">
+                    <i class="fas fa-save"></i> 强制保存
+                </button>
+                <button class="confirm-btn confirm-cancel" onclick="hideDuplicateDialog()">
+                    <i class="fas fa-edit"></i> 修改后再存
+                </button>
+                <button class="confirm-btn confirm-no" onclick="hideDuplicateDialog()">
+                    <i class="fas fa-times"></i> 取消保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 存储所有历史记录（使用localStorage持久化）
+        let historyRecords = [];
+        let currentDeleteId = null;
+        let pendingRecord = null; // 待保存的记录（用于重复确认后）
+        let selectedCategory = '澳门下家'; // 默认选中的分类
+        
+        // 页面加载时从localStorage读取历史记录并设置日期选择器默认值（真实当前日期）
+        window.onload = function() {
+            loadFromLocalStorage();
+            updateHistoryDisplay();
+            updateUserCardsDisplay();
+            updateSummaryDisplay(); // 更新汇总显示
+            initDatePicker(); // 初始化日期选择器为真实当前日期
+            populateFilterOptions(); // 填充筛选器选项
+            setInitialCategory(); // 设置初始选中的分类按钮
+        };
+        
+        // 设置初始选中的分类按钮
+        function setInitialCategory() {
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-category') === selectedCategory) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        
+        // 初始化日期选择器（设置为真实当前日期）
+        function initDatePicker() {
+            const dateInput = document.getElementById('reportDate');
+            const filterDateInput = document.getElementById('dateFilter');
+            
+            // 获取真实当前日期（本地时区）
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const today = `${year}-${month}-${day}`;
+            
+            // 设置报表日期选择器为今天
+            dateInput.value = today;
+            dateInput.min = '2020-01-01'; // 设置最早可选日期
+            dateInput.max = '2030-12-31'; // 设置最晚可选日期
+            
+            // 设置筛选日期选择器（不设置默认值）
+            filterDateInput.value = '';
+            filterDateInput.min = '2020-01-01';
+            filterDateInput.max = '2030-12-31';
+            
+            console.log("初始化日期选择器为真实当前日期:", today);
+        }
+        
+        // 选择分类
+        function selectCategory(button, category) {
+            // 移除所有按钮的active类
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 给当前点击的按钮添加active类
+            button.classList.add('active');
+            
+            // 更新选中的分类
+            selectedCategory = category;
+            console.log("选中分类:", selectedCategory);
+        }
+        
+        // 填充筛选器选项
+        function populateFilterOptions() {
+            const userFilter = document.getElementById('userFilter');
+            
+            // 清空现有选项（保留"所有"选项）
+            userFilter.innerHTML = '<option value="">所有用户</option>';
+            
+            // 收集唯一用户
+            const uniqueUsers = [...new Set(historyRecords.map(r => r.applicant))];
+            
+            // 添加用户选项
+            uniqueUsers.sort().forEach(user => {
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                userFilter.appendChild(option);
+            });
+        }
+        
+        // 保存记录到localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('orderReportHistory', JSON.stringify(historyRecords));
+        }
+        
+        // 从localStorage读取历史记录
+        function loadFromLocalStorage() {
+            const savedRecords = localStorage.getItem('orderReportHistory');
+            if (savedRecords) {
+                historyRecords = JSON.parse(savedRecords);
+            }
+        }
+        
+        // 保存记录（带防重复检查）
+        function saveRecord() {
+            const orderDataInput = document.getElementById('orderData').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+            const dateInput = document.getElementById('reportDate');
+            
+            try {
+                // 1. 提取申报人姓名
+                let applicantName = "未知申报人";
+                const applicantMatch = orderDataInput.match(/申报人：([^\n]+)/);
+                if (applicantMatch && applicantMatch[1]) {
+                    applicantName = applicantMatch[1].trim();
+                }
+                
+                // 2. 精准提取"订单金额明细："到"="之间的内容
+                const detailStart = orderDataInput.indexOf("订单金额明细：");
+                if (detailStart === -1) throw new Error('未找到"订单金额明细："关键词');
+                
+                const detailEnd = orderDataInput.indexOf("=", detailStart);
+                if (detailEnd === -1) throw new Error('未找到"="符号，无法确定订单金额明细结束位置');
+                
+                // 提取"订单金额明细："后到"="前的字符串（不含"="）
+                const amountDetail = orderDataInput.substring(
+                    detailStart + "订单金额明细：".length, 
+                    detailEnd
+                ).trim();
+                
+                if (!amountDetail) throw new Error("订单金额明细内容为空");
+                
+                // 3. 过滤提取内容：仅保留数字和加号
+                const filteredData = amountDetail.replace(/[^0-9+]/g, '');
+                if (!filteredData) throw new Error("订单金额明细中无有效数字和加号");
+                
+                // 4. 解析数据：按加号分割为数字数组
+                const orderData = parseOrderData(filteredData);
+                const dataCount = orderData.length;
+                
+                // 5. 获取选择的日期（如果用户未选择则使用真实当前日期）
+                let selectedDate = dateInput.value;
+                if (!selectedDate) {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    selectedDate = `${year}-${month}-${day}`;
+                    dateInput.value = selectedDate; // 更新日期选择器显示
+                    console.log("使用真实当前日期:", selectedDate);
+                }
+                
+                // 6. 提取订单总额、中奖情况和盈亏情况（通用提取所有中奖类型）
+                const extractedData = extractOrderData(orderDataInput, applicantName);
+                
+                // 7. 检查是否有重复记录
+                const isDuplicate = checkDuplicate(selectedDate, applicantName, orderDataInput);
+                
+                if (isDuplicate) {
+                    // 如果有重复，显示警告对话框
+                    showDuplicateWarning(selectedDate, applicantName, orderDataInput);
+                    return;
+                }
+                
+                // 8. 如果没有重复，直接保存
+                directSaveRecord(selectedDate, selectedCategory, applicantName, orderDataInput, 
+                               orderData, dataCount, extractedData);
+                
+            } catch (e) {
+                // 显示错误
+                errorMsg.textContent = e.message;
+                errorMsg.style.display = 'block';
+                successMsg.style.display = 'none';
+                console.error(e);
+            }
+        }
+        
+        // 提取订单数据（总额、所有中奖类型、盈亏）- 修复版
+        function extractOrderData(orderDataInput, applicantName) {
+            // 提取订单总额
+            let totalAmount = "0";
+            const totalAmountMatch = orderDataInput.match(/订单总额：([\d.]+)/);
+            if (totalAmountMatch && totalAmountMatch[1]) {
+                totalAmount = totalAmountMatch[1];
+            }
+            
+            // 提取所有中奖类型（修复版：逐行分析，相同奖项合并）
+            const winnings = {};
+            const lines = orderDataInput.split('\n');
+            
+            for (const line of lines) {
+                // 检查是否是中奖行（包含" 中:"）
+                if (line.includes(' 中:')) {
+                    // 提取奖项名称（第一个冒号前的部分）
+                    const typeMatch = line.match(/^([^\n:]+?) 中:/);
+                    if (typeMatch) {
+                        const type = typeMatch[1].trim(); // 奖项名称
+                        const rest = line.substring(typeMatch[0].length).trim(); // "中:"之后的内容
+                        
+                        // 尝试提取金额：优先提取等号后面的部分
+                        let amountStr = rest;
+                        if (amountStr.includes('=')) {
+                            // 取最后一个等号后面的部分
+                            amountStr = amountStr.split('=').pop();
+                        }
+                        
+                        // 从amountStr中提取第一个连续的数字（可能包含小数点）
+                        const amountMatch = amountStr.match(/[\d.]+/);
+                        if (amountMatch) {
+                            let amount = amountMatch[0];
+                            // 处理小数点开头的情况
+                            if (amount.startsWith('.')) {
+                                amount = '0' + amount;
+                            }
+                            
+                            // 如果奖项已存在，则累加金额
+                            if (winnings[type]) {
+                                winnings[type] = (parseFloat(winnings[type]) + parseFloat(amount)).toString();
+                            } else {
+                                winnings[type] = amount;
+                            }
+                        } else {
+                            // 如果没有匹配到数字，存储0
+                            if (!winnings[type]) {
+                                winnings[type] = '0';
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 提取盈亏情况
+            let profitLoss = "0";
+            const profitLossMatch = orderDataInput.match(/盈亏情况：([\d.-]+)/);
+            if (profitLossMatch && profitLossMatch[1]) {
+                profitLoss = profitLossMatch[1];
+            }
+            
+            return {
+                applicant: applicantName,
+                totalAmount: totalAmount,
+                winnings: winnings, // 所有中奖类型（键值对，相同奖项已合并）
+                profitLoss: profitLoss
+            };
+        }
+        
+        // 检查重复记录
+        function checkDuplicate(date, applicant, orderDataInput) {
+            return historyRecords.some(record => {
+                // 检查日期和申报人是否相同
+                if (record.timestamp === date && record.applicant === applicant) {
+                    // 检查订单数据是否相似（比较订单金额明细部分）
+                    const recordAmountDetail = extractAmountDetail(record.originalData);
+                    const currentAmountDetail = extractAmountDetail(orderDataInput);
+                    
+                    // 如果订单金额明细内容相同或相似度很高，则认为重复
+                    return recordAmountDetail === currentAmountDetail;
+                }
+                return false;
+            });
+        }
+        
+        // 提取订单金额明细内容
+        function extractAmountDetail(orderData) {
+            const detailStart = orderData.indexOf("订单金额明细：");
+            if (detailStart === -1) return "";
+            
+            const detailEnd = orderData.indexOf("=", detailStart);
+            if (detailEnd === -1) return "";
+            
+            return orderData.substring(
+                detailStart + "订单金额明细：".length, 
+                detailEnd
+            ).trim();
+        }
+        
+        // 显示重复警告对话框
+        function showDuplicateWarning(date, applicant, orderDataInput) {
+            const duplicateDialog = document.getElementById('duplicateDialog');
+            const duplicateMessage = document.getElementById('duplicateMessage');
+            
+            duplicateMessage.innerHTML = `
+                检测到相同日期（${date}）、相同申报人（${applicant}）的相似订单记录。<br>
+                是否继续保存？
+            `;
+            
+            // 保存待保存的记录信息
+            pendingRecord = {
+                date: date,
+                applicant: applicant,
+                orderDataInput: orderDataInput
+            };
+            
+            duplicateDialog.style.display = 'flex';
+        }
+        
+        // 隐藏重复警告对话框
+        function hideDuplicateDialog() {
+            document.getElementById('duplicateDialog').style.display = 'none';
+            pendingRecord = null;
+        }
+        
+        // 强制保存记录（忽略重复警告）
+        function forceSaveRecord() {
+            if (!pendingRecord) return;
+            
+            const orderDataInput = pendingRecord.orderDataInput;
+            const date = pendingRecord.date;
+            const applicant = pendingRecord.applicant;
+            
+            // 解析订单数据
+            const detailStart = orderDataInput.indexOf("订单金额明细：");
+            const detailEnd = orderDataInput.indexOf("=", detailStart);
+            const amountDetail = orderDataInput.substring(
+                detailStart + "订单金额明细：".length, 
+                detailEnd
+            ).trim();
+            
+            const filteredData = amountDetail.replace(/[^0-9+]/g, '');
+            const orderData = parseOrderData(filteredData);
+            const dataCount = orderData.length;
+            
+            // 提取订单数据
+            const extractedData = extractOrderData(orderDataInput, applicant);
+            
+            // 直接保存
+            directSaveRecord(date, selectedCategory, applicant, orderDataInput, 
+                           orderData, dataCount, extractedData);
+            
+            // 隐藏对话框
+            hideDuplicateDialog();
+        }
+        
+        // 直接保存记录（不进行重复检查）
+        function directSaveRecord(date, category, applicantName, orderDataInput, 
+                                orderData, dataCount, extractedData) {
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+            
+            try {
+                // 生成动态表格（已移除申报人显示）
+                const tableHTML = createDynamicTableHTML(orderData, dataCount);
+                const compensationCardHTML = createCompensationCardHTML(orderDataInput);
+                
+                // 创建历史记录对象（包含分类信息）
+                const record = {
+                    id: Date.now(),
+                    timestamp: date,
+                    category: category, // 保存分类信息
+                    applicant: applicantName,
+                    originalData: orderDataInput,
+                    tableHTML: tableHTML,
+                    compensationCardHTML: compensationCardHTML,
+                    dataCount: dataCount,
+                    extractedData: extractedData // 保存提取的所有数据
+                };
+                
+                // 添加到历史记录数组（最新的在最前面）
+                historyRecords.unshift(record);
+                
+                // 保存到localStorage
+                saveToLocalStorage();
+                
+                // 更新历史记录显示
+                updateHistoryDisplay();
+                
+                // 更新用户卡片显示（包含分类和日期）
+                updateUserCardsDisplay();
+                
+                // 更新汇总显示
+                updateSummaryDisplay();
+                
+                // 更新筛选器选项
+                populateFilterOptions();
+                
+                // 清除输入框（保留日期选择）
+                document.getElementById('orderData').value = '';
+                
+                // 显示成功消息
+                errorMsg.style.display = 'none';
+                successMsg.style.display = 'block';
+                setTimeout(() => successMsg.style.display = 'none', 3000);
+                
+            } catch (e) {
+                // 显示错误
+                errorMsg.textContent = e.message;
+                errorMsg.style.display = 'block';
+                successMsg.style.display = 'none';
+                console.error(e);
+            }
+        }
+        
+        // 应用筛选条件
+        function applyFilters() {
+            updateUserCardsDisplay();
+        }
+        
+        // 创建动态表格HTML（已移除申报人显示）
+        function createDynamicTableHTML(orderData, dataCount) {
+            // 检测是否为移动端
+            const isMobile = window.innerWidth <= 768;
+            const isSmallMobile = window.innerWidth <= 480;
+            
+            // 根据设备类型和数量动态计算列数
+            let columns;
+            if (isSmallMobile) {
+                // 超小屏幕：最多3列
+                if (dataCount <= 3) columns = 1;
+                else if (dataCount <= 6) columns = 2;
+                else columns = 3;
+            } else if (isMobile) {
+                // 移动端：最多4列
+                if (dataCount <= 4) columns = 1;
+                else if (dataCount <= 8) columns = 2;
+                else if (dataCount <= 12) columns = 3;
+                else columns = 4;
+            } else {
+                // 桌面端：保持原有逻辑
+                if (dataCount <= 5) {
+                    columns = 1;
+                } else if (dataCount <= 12) {
+                    columns = 2;
+                } else if (dataCount <= 24) {
+                    columns = 3;
+                } else if (dataCount <= 40) {
+                    columns = 4;
+                } else if (dataCount <= 60) {
+                    columns = 5;
+                } else if (dataCount <= 84) {
+                    columns = 6;
+                } else if (dataCount <= 112) {
+                    columns = 7;
+                } else {
+                    columns = 8;
+                }
+            }
+            
+            const rows = Math.ceil(dataCount / columns);
+            
+            let tableHTML = `
+                <div class="dynamic-table-container">
+                    <table class="dynamic-table">
+                        <thead>
+                            <tr>`;
+            
+            // 创建表头（动态列数，每列包含"序"和"下单"）
+            for (let i = 0; i < columns; i++) {
+                tableHTML += `<th>序</th><th>下单</th>`;
+            }
+            tableHTML += `</tr></thead><tbody>`;
+            
+            // 创建表格内容（按列优先排列，垂直序号）
+            for (let row = 0; row < rows; row++) {
+                tableHTML += '<tr>';
+                for (let col = 0; col < columns; col++) {
+                    const index = row + col * rows;
+                    if (index < dataCount) {
+                        tableHTML += `<td><span class="serial-number">${index + 1}</span></td><td>${orderData[index]}</td>`;
+                    } else {
+                        tableHTML += '<td></td><td></td>'; // 空单元格填充
+                    }
+                }
+                tableHTML += '</tr>';
+            }
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.9rem; color: #7f8c8d; text-align: right;">
+                    共 ${dataCount} 条订单记录，按 ${columns} 列 × ${rows} 行显示
+                </div>
+            `;
+            
+            return tableHTML;
+        }
+        
+        // 创建赔付明细卡片HTML（高亮赔金和盈亏情况）
+        function createCompensationCardHTML(originalData) {
+            if (!originalData) return '';
+            
+            // 过滤"订单金额明细："到"(共计x条)"的内容
+            const filterRegex = /订单金额明细：.*?\(共计\d+条\)/s;
+            let filteredContent = originalData.replace(filterRegex, '').trim();
+            
+            // 按行分割
+            const lines = filteredContent.split('\n');
+            let processedLines = [];
+            
+            for (const line of lines) {
+                // 处理盈亏情况行
+                if (line.includes('盈亏情况：')) {
+                    // 提取金额部分
+                    const match = line.match(/盈亏情况：([\d.-]+)/);
+                    if (match) {
+                        const amount = match[1];
+                        const num = parseFloat(amount);
+                        const isPositive = num >= 0;
+                        const colorClass = isPositive ? 'profit-positive' : 'profit-negative';
+                        const sign = isPositive ? '+' : '';
+                        
+                        // 重构该行，将金额部分用span包裹
+                        const newLine = line.replace(
+                            /(盈亏情况：)([\d.-]+)/, 
+                            `$1<span class="${colorClass}">${sign}${amount}</span>`
+                        );
+                        processedLines.push(newLine);
+                    } else {
+                        processedLines.push(line);
+                    }
+                } 
+                // 处理其他行中的赔:金额（红色）
+                else {
+                    // 高亮"赔:"后面的金额（红色）
+                    const newLine = line.replace(/(赔:)([\d.]+)/g, 
+                        '$1<span class="compensation-amount">$2</span>');
+                    processedLines.push(newLine);
+                }
+            }
+            
+            // 重新拼接行
+            filteredContent = processedLines.join('\n');
+            
+            return `
+                <div class="compensation-card">
+                    <div class="compensation-header">赔付明细</div>
+                    <div class="compensation-content">${filteredContent || '无过滤后内容'}</div>
+                </div>
+            `;
+        }
+        
+        // 解析订单数据
+        function parseOrderData(filteredData) {
+            const numbers = filteredData.split('+')
+                .map(item => item.trim())
+                .filter(item => item !== '')
+                .map(numStr => {
+                    const num = parseFloat(numStr);
+                    if (isNaN(num)) throw new Error(`订单金额明细含无效数字：${numStr}`);
+                    return num;
+                });
+            
+            if (numbers.length === 0) throw new Error("未从订单金额明细中解析到有效数字");
+            return numbers;
+        }
+        
+        // 更新历史记录显示
+        function updateHistoryDisplay() {
+            const historyContainer = document.getElementById('historyContainer');
+            const recordCounter = document.getElementById('recordCounter');
+            
+            recordCounter.textContent = historyRecords.length;
+            
+            if (historyRecords.length === 0) {
+                historyContainer.innerHTML = `
+                    <div class="empty-history">
+                        <i class="fas fa-clock" style="font-size: 2.5rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>暂无历史记录，请先录入并保存订单数据</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let historyHTML = '';
+            historyRecords.forEach((record, index) => {
+                historyHTML += `
+                    <div class="history-card">
+                        <div class="history-header">
+                            <div>
+                                <span class="category-tag" style="background: rgba(52, 152, 219, 0.2); color: #2980b9; margin-right: 8px;">
+                                    <i class="fas fa-user"></i> ${record.applicant}
+                                </span>
+                                <span>订单报表 #${index + 1}</span>
+                                <span class="category-tag ${getCategoryClass(record.category)}">${record.category}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="history-time">${record.timestamp}</span>
+                                <button class="delete-btn" onclick="showDeleteConfirm(${record.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="history-body">
+                            <div class="history-content">
+                                ${record.tableHTML}
+                                ${record.compensationCardHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyContainer.innerHTML = historyHTML;
+        }
+        
+        // 更新用户卡片显示（包含分类和日期），支持筛选
+        function updateUserCardsDisplay() {
+            const container = document.getElementById('userCardsContainer');
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const userFilter = document.getElementById('userFilter').value;
+            
+            if (historyRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-history">
+                        <i class="fas fa-user-friends" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>暂无用户数据</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 应用筛选条件
+            let filteredRecords = historyRecords.filter(record => {
+                // 搜索框筛选（用户、日期、分类）
+                const matchesSearch = 
+                    record.applicant.toLowerCase().includes(searchInput) ||
+                    record.timestamp.includes(searchInput) ||
+                    record.category.toLowerCase().includes(searchInput);
+                
+                // 日期筛选
+                const matchesDate = dateFilter ? record.timestamp === dateFilter : true;
+                
+                // 分类筛选
+                const matchesCategory = categoryFilter ? record.category === categoryFilter : true;
+                
+                // 用户筛选
+                const matchesUser = userFilter ? record.applicant === userFilter : true;
+                
+                return matchesSearch && matchesDate && matchesCategory && matchesUser;
+            });
+            
+            if (filteredRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-history">
+                        <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>没有找到匹配的用户</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let cardsHTML = '';
+            filteredRecords.forEach(record => {
+                const data = record.extractedData;
+                const profitLoss = parseFloat(data.profitLoss);
+                const profitLossClass = profitLoss >= 0 ? 'profit-positive' : 'profit-negative';
+                const profitLossIcon = profitLoss >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                const categoryClass = getCategoryClass(record.category);
+                
+                cardsHTML += `
+                    <div class="user-card">
+                        <div class="user-card-header">
+                            <div class="user-info-left">
+                                <div class="user-name">${data.applicant}</div>
+                                <span class="user-category category-tag ${categoryClass}">${record.category}</span>
+                            </div>
+                            <div class="user-date">${record.timestamp}</div>
+                        </div>
+                        
+                        <div class="user-info-row">
+                            <span class="info-label">订单总额:</span>
+                            <span class="info-value">${data.totalAmount}</span>
+                        </div>
+                        
+                        <div class="winning-section">
+                            <div class="winning-title">
+                                <i class="fas fa-trophy"></i> 中奖情况
+                            </div>
+                `;
+                
+                // 添加中奖项目（已合并相同奖项）
+                for (const [type, amount] of Object.entries(data.winnings)) {
+                    cardsHTML += `
+                        <div class="winning-item">
+                            <span class="winning-type">${type}:</span>
+                            <span class="winning-amount">${parseFloat(amount).toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+                
+                cardsHTML += `
+                        </div>
+                        
+                        <div class="profit-loss ${profitLossClass}">
+                            <i class="fas ${profitLossIcon}"></i> 盈亏: ${data.profitLoss}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = cardsHTML;
+        }
+        
+        // 更新汇总显示（按分类统计中奖情况）
+        function updateSummaryDisplay() {
+            const container = document.getElementById('summaryContainer');
+            
+            if (historyRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-history">
+                        <i class="fas fa-chart-pie" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>暂无汇总数据</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 定义分类
+            const categories = [
+                { id: '澳门上家', name: '澳门上家', icon: 'fas fa-arrow-up', color: '#3498db' },
+                { id: '澳门下家', name: '澳门下家', icon: 'fas fa-arrow-down', color: '#2ecc71' },
+                { id: '粤港上家', name: '粤港上家', icon: 'fas fa-arrow-up', color: '#9b59b6' },
+                { id: '粤港下家', name: '粤港下家', icon: 'fas fa-arrow-down', color: '#f1c40f' }
+            ];
+            
+            // 初始化汇总数据（按分类和奖项）
+            const summaryData = {};
+            categories.forEach(cat => {
+                summaryData[cat.id] = {
+                    count: 0,           // 订单数
+                    totalAmount: 0,     // 订单总额
+                    totalWinning: 0,    // 中奖总金额
+                    totalProfit: 0,     // 盈亏总额
+                    winnings: {}        // 按奖项统计 {奖项名称: 总金额}
+                };
+            });
+            
+            // 汇总数据
+            historyRecords.forEach(record => {
+                const catId = record.category;
+                if (summaryData.hasOwnProperty(catId)) {
+                    const data = record.extractedData;
+                    summaryData[catId].count++;
+                    summaryData[catId].totalAmount += parseFloat(data.totalAmount || 0);
+                    
+                    // 计算中奖总金额
+                    let winningSum = 0;
+                    for (const [type, amount] of Object.entries(data.winnings)) {
+                        const amt = parseFloat(amount || 0);
+                        winningSum += amt;
+                        
+                        // 按奖项统计
+                        if (summaryData[catId].winnings[type]) {
+                            summaryData[catId].winnings[type] += amt;
+                        } else {
+                            summaryData[catId].winnings[type] = amt;
+                        }
+                    }
+                    summaryData[catId].totalWinning += winningSum;
+                    
+                    summaryData[catId].totalProfit += parseFloat(data.profitLoss || 0);
+                }
+            });
+            
+            // 生成汇总HTML
+            let summaryHTML = '<div class="summary-container">';
+            
+            categories.forEach(cat => {
+                const data = summaryData[cat.id];
+                const profitClass = data.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
+                const profitSign = data.totalProfit >= 0 ? '+' : '';
+                
+                summaryHTML += `
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <i class="${cat.icon}" style="color: ${cat.color};"></i>
+                            <div class="summary-title">${cat.name}</div>
+                        </div>
+                        <table class="summary-table">
+                            <tr>
+                                <th>订单总数</th>
+                                <td class="summary-value">${data.count}</td>
+                            </tr>
+                            <tr>
+                                <th>订单总额</th>
+                                <td class="summary-value">${data.totalAmount.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <th>中奖总金额</th>
+                                <td class="summary-value">${data.totalWinning.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <th>盈亏总额</th>
+                                <td class="summary-value ${profitClass}">
+                                    ${profitSign}${data.totalProfit.toFixed(2)}
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <div class="winning-summary">
+                            <div class="winning-summary-title">
+                                <i class="fas fa-trophy"></i> 中奖情况统计
+                            </div>
+                `;
+                
+                // 添加中奖情况统计（按奖项）
+                if (Object.keys(data.winnings).length > 0) {
+                    for (const [type, amount] of Object.entries(data.winnings)) {
+                        summaryHTML += `
+                            <div class="winning-summary-item">
+                                <span class="winning-summary-type">${type}:</span>
+                                <span class="winning-summary-amount">${amount.toFixed(2)}</span>
+                            </div>
+                        `;
+                    }
+                } else {
+                    summaryHTML += `
+                        <div class="winning-summary-item">
+                            <span class="winning-summary-type">无中奖记录</span>
+                        </div>
+                    `;
+                }
+                
+                summaryHTML += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            summaryHTML += '</div>';
+            container.innerHTML = summaryHTML;
+        }
+        
+        // 获取分类对应的CSS类
+        function getCategoryClass(category) {
+            switch(category) {
+                case '澳门上家': return 'category-macau-up';
+                case '澳门下家': return 'category-macau-down';
+                case '粤港上家': return 'category-guangdong-up';
+                case '粤港下家': return 'category-guangdong-down';
+                default: return '';
+            }
+        }
+        
+        // 清空输入
+        function clearInput() {
+            document.getElementById('orderData').value = '';
+            document.getElementById('errorMsg').style.display = 'none';
+            document.getElementById('successMsg').style.display = 'none';
+            // 不清空日期选择器，保留用户选择
+        }
+        
+        // 显示删除确认对话框
+        function showDeleteConfirm(recordId) {
+            currentDeleteId = recordId;
+            const confirmDialog = document.getElementById('confirmDialog');
+            const confirmTitle = document.getElementById('confirmTitle');
+            const confirmMessage = document.getElementById('confirmMessage');
+            const confirmYesBtn = document.getElementById('confirmYesBtn');
+            
+            confirmTitle.textContent = '确认删除';
+            confirmMessage.textContent = '确定要删除这条订单报表吗？此操作不可恢复！';
+            confirmYesBtn.textContent = '删除';
+            confirmYesBtn.onclick = deleteRecord;
+            
+            confirmDialog.style.display = 'flex';
+        }
+        
+        // 显示清空确认对话框
+        function showClearConfirm() {
+            const confirmDialog = document.getElementById('confirmDialog');
+            const confirmTitle = document.getElementById('confirmTitle');
+            const confirmMessage = document.getElementById('confirmMessage');
+            const confirmYesBtn = document.getElementById('confirmYesBtn');
+            
+            confirmTitle.textContent = '确认清空数据';
+            confirmMessage.textContent = '确定要清空所有历史记录和当前数据吗？此操作不可恢复！';
+            confirmYesBtn.textContent = '清空';
+            confirmYesBtn.onclick = clearAllData;
+            
+            confirmDialog.style.display = 'flex';
+        }
+        
+        // 隐藏确认对话框
+        function hideClearConfirm() {
+            document.getElementById('confirmDialog').style.display = 'none';
+        }
+        
+        // 删除记录
+        function deleteRecord() {
+            if (!currentDeleteId) return;
+            
+            historyRecords = historyRecords.filter(record => record.id !== currentDeleteId);
+            saveToLocalStorage();
+            updateHistoryDisplay();
+            updateUserCardsDisplay();
+            updateSummaryDisplay(); // 更新汇总显示
+            populateFilterOptions(); // 更新筛选器选项
+            hideClearConfirm();
+            
+            // 显示成功消息
+            const successMsg = document.getElementById('successMsg');
+            successMsg.innerHTML = '<i class="fas fa-check-circle"></i> 报表已删除！';
+            successMsg.style.display = 'block';
+            setTimeout(() => successMsg.style.display = 'none', 3000);
+            
+            currentDeleteId = null;
+        }
+        
+        // 清空所有数据（带确认提示）
+        function clearAllData() {
+            historyRecords = [];
+            saveToLocalStorage();
+            updateHistoryDisplay();
+            updateUserCardsDisplay();
+            updateSummaryDisplay(); // 更新汇总显示
+            populateFilterOptions(); // 更新筛选器选项
+            document.getElementById('orderData').value = '';
+            // 重置日期选择器为真实当前日期
+            initDatePicker();
+            hideClearConfirm();
+            
+            // 显示成功消息
+            const successMsg = document.getElementById('successMsg');
+            successMsg.innerHTML = '<i class="fas fa-check-circle"></i> 所有数据已清空！';
+            successMsg.style.display = 'block';
+            setTimeout(() => successMsg.style.display = 'none', 3000);
+        }
+        
+        // 导入数据
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('orderData').value = e.target.result;
+                
+                // 显示成功消息
+                const successMsg = document.getElementById('successMsg');
+                successMsg.innerHTML = '<i class="fas fa-check-circle"></i> 数据导入成功！';
+                successMsg.style.display = 'block';
+                setTimeout(() => successMsg.style.display = 'none', 3000);
+            };
+            reader.readAsText(file);
+            
+            // 重置文件输入，允许重复选择同一文件
+            event.target.value = '';
+        }
+        
+        // 导出所有记录
+        function exportAllRecords() {
+            if (historyRecords.length === 0) {
+                alert('没有历史记录可导出！');
+                return;
+            }
+            
+            let exportContent = '';
+            historyRecords.forEach((record, index) => {
+                exportContent += `=== 订单报表 #${index + 1} (${record.timestamp}) [${record.category}] 申报人：${record.applicant} ===\n`;
+                exportContent += record.originalData + '\n\n';
+            });
+            
+            const blob = new Blob([exportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `订单报表历史记录_${new Date().toISOString().slice(0, 10)}.txt`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+        }
+    </script>
+</body>
+</html>
