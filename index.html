@@ -929,8 +929,15 @@
         }
         
         .winning-summary-amount {
-            color: #27ae60;
             font-weight: 600;
+        }
+        
+        .winning-summary-amount.positive {
+            color: #27ae60;
+        }
+        
+        .winning-summary-amount.negative {
+            color: #e74c3c;
         }
         
         /* 用户卡片容器布局 */
@@ -1121,7 +1128,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（新增我的澳门和我的粤港卡片）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（去除订单总数和中奖总金额）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -2015,7 +2022,7 @@
             container.innerHTML = cardsHTML;
         }
         
-        // 更新汇总显示（按分类统计中奖情况）
+        // 更新汇总显示（按分类统计中奖情况）- 已去除订单总数和中奖总金额
         function updateSummaryDisplay() {
             const container = document.getElementById('summaryContainer');
             
@@ -2041,7 +2048,6 @@
             const summaryData = {};
             categories.forEach(cat => {
                 summaryData[cat.id] = {
-                    count: 0,           // 订单数
                     totalAmount: 0,     // 订单总额
                     totalWinning: 0,    // 中奖总金额
                     totalProfit: 0,     // 盈亏总额
@@ -2054,7 +2060,6 @@
                 const catId = record.category;
                 if (summaryData.hasOwnProperty(catId)) {
                     const data = record.extractedData;
-                    summaryData[catId].count++;
                     summaryData[catId].totalAmount += parseFloat(data.totalAmount || 0);
                     
                     // 计算中奖总金额
@@ -2076,7 +2081,7 @@
                 }
             });
             
-            // 生成汇总HTML
+            // 生成汇总HTML（去除订单总数和中奖总金额）
             let summaryHTML = '<div class="summary-container">';
             
             categories.forEach(cat => {
@@ -2092,16 +2097,8 @@
                         </div>
                         <table class="summary-table">
                             <tr>
-                                <th>订单总数</th>
-                                <td class="summary-value">${data.count}</td>
-                            </tr>
-                            <tr>
                                 <th>订单总额</th>
                                 <td class="summary-value">${data.totalAmount.toFixed(2)}</td>
-                            </tr>
-                            <tr>
-                                <th>中奖总金额</th>
-                                <td class="summary-value">${data.totalWinning.toFixed(2)}</td>
                             </tr>
                             <tr>
                                 <th>盈亏总额</th>
@@ -2120,10 +2117,12 @@
                 // 添加中奖情况统计（按奖项）
                 if (Object.keys(data.winnings).length > 0) {
                     for (const [type, amount] of Object.entries(data.winnings)) {
+                        const amountClass = amount >= 0 ? 'positive' : 'negative';
+                        const sign = amount >= 0 ? '+' : '';
                         summaryHTML += `
                             <div class="winning-summary-item">
                                 <span class="winning-summary-type">${type}:</span>
-                                <span class="winning-summary-amount">${amount.toFixed(2)}</span>
+                                <span class="winning-summary-amount ${amountClass}">${sign}${amount.toFixed(2)}</span>
                             </div>
                         `;
                     }
@@ -2145,7 +2144,7 @@
             container.innerHTML = summaryHTML;
         }
         
-        // 更新我的账户卡片（新增）
+        // 更新我的账户卡片（按奖项类型计算差额）- 已去除订单总数和中奖总金额
         function updateMyAccountCards() {
             const container = document.getElementById('myAccountContainer');
             
@@ -2171,7 +2170,6 @@
             const summaryData = {};
             categories.forEach(cat => {
                 summaryData[cat.id] = {
-                    count: 0,           // 订单数
                     totalAmount: 0,     // 订单总额
                     totalWinning: 0,    // 中奖总金额
                     totalProfit: 0,     // 盈亏总额
@@ -2184,7 +2182,6 @@
                 const catId = record.category;
                 if (summaryData.hasOwnProperty(catId)) {
                     const data = record.extractedData;
-                    summaryData[catId].count++;
                     summaryData[catId].totalAmount += parseFloat(data.totalAmount || 0);
                     
                     // 计算中奖总金额
@@ -2206,25 +2203,47 @@
                 }
             });
             
-            // 计算我的澳门（澳门下家 - 澳门上家）
+            // 计算我的澳门（澳门下家 - 澳门上家）- 按奖项类型逐项相减
             const myMacau = {
-                count: summaryData['澳门下家'].count - summaryData['澳门上家'].count,
                 totalAmount: summaryData['澳门下家'].totalAmount - summaryData['澳门上家'].totalAmount,
                 totalWinning: summaryData['澳门下家'].totalWinning - summaryData['澳门上家'].totalWinning,
                 totalProfit: summaryData['澳门下家'].totalProfit - summaryData['澳门上家'].totalProfit,
                 winnings: {}
             };
             
-            // 计算我的粤港（粤港下家 - 粤港上家）
+            // 逐项相减中奖金额
+            const allAwardTypes = new Set([
+                ...Object.keys(summaryData['澳门下家'].winnings),
+                ...Object.keys(summaryData['澳门上家'].winnings)
+            ]);
+            
+            allAwardTypes.forEach(type => {
+                const downAmount = summaryData['澳门下家'].winnings[type] || 0;
+                const upAmount = summaryData['澳门上家'].winnings[type] || 0;
+                myMacau.winnings[type] = downAmount - upAmount;
+            });
+            
+            // 计算我的粤港（粤港下家 - 粤港上家）- 按奖项类型逐项相减
             const myGuangdong = {
-                count: summaryData['粤港下家'].count - summaryData['粤港上家'].count,
                 totalAmount: summaryData['粤港下家'].totalAmount - summaryData['粤港上家'].totalAmount,
                 totalWinning: summaryData['粤港下家'].totalWinning - summaryData['粤港上家'].totalWinning,
                 totalProfit: summaryData['粤港下家'].totalProfit - summaryData['粤港上家'].totalProfit,
                 winnings: {}
             };
             
-            // 生成我的账户卡片HTML
+            // 逐项相减中奖金额
+            const allAwardTypesGD = new Set([
+                ...Object.keys(summaryData['粤港下家'].winnings),
+                ...Object.keys(summaryData['粤港上家'].winnings)
+            ]);
+            
+            allAwardTypesGD.forEach(type => {
+                const downAmount = summaryData['粤港下家'].winnings[type] || 0;
+                const upAmount = summaryData['粤港上家'].winnings[type] || 0;
+                myGuangdong.winnings[type] = downAmount - upAmount;
+            });
+            
+            // 生成我的账户卡片HTML（去除订单总数和中奖总金额）
             let accountHTML = `
                 <!-- 我的澳门卡片 -->
                 <div class="summary-card">
@@ -2234,16 +2253,8 @@
                     </div>
                     <table class="summary-table">
                         <tr>
-                            <th>订单总数</th>
-                            <td class="summary-value">${myMacau.count}</td>
-                        </tr>
-                        <tr>
                             <th>订单总额</th>
                             <td class="summary-value">${myMacau.totalAmount.toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                            <th>中奖总金额</th>
-                            <td class="summary-value">${myMacau.totalWinning.toFixed(2)}</td>
                         </tr>
                         <tr>
                             <th>盈亏总额</th>
@@ -2252,6 +2263,35 @@
                             </td>
                         </tr>
                     </table>
+                    
+                    <div class="winning-summary">
+                        <div class="winning-summary-title">
+                            <i class="fas fa-trophy"></i> 中奖情况统计
+                        </div>
+            `;
+            
+            // 添加我的澳门中奖情况（按奖项）
+            if (Object.keys(myMacau.winnings).length > 0) {
+                for (const [type, amount] of Object.entries(myMacau.winnings)) {
+                    const amountClass = amount >= 0 ? 'positive' : 'negative';
+                    const sign = amount >= 0 ? '+' : '';
+                    accountHTML += `
+                        <div class="winning-summary-item">
+                            <span class="winning-summary-type">${type}:</span>
+                            <span class="winning-summary-amount ${amountClass}">${sign}${amount.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+            } else {
+                accountHTML += `
+                    <div class="winning-summary-item">
+                        <span class="winning-summary-type">无中奖记录</span>
+                    </div>
+                `;
+            }
+            
+            accountHTML += `
+                    </div>
                 </div>
                 
                 <!-- 我的粤港卡片 -->
@@ -2262,16 +2302,8 @@
                     </div>
                     <table class="summary-table">
                         <tr>
-                            <th>订单总数</th>
-                            <td class="summary-value">${myGuangdong.count}</td>
-                        </tr>
-                        <tr>
                             <th>订单总额</th>
                             <td class="summary-value">${myGuangdong.totalAmount.toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                            <th>中奖总金额</th>
-                            <td class="summary-value">${myGuangdong.totalWinning.toFixed(2)}</td>
                         </tr>
                         <tr>
                             <th>盈亏总额</th>
@@ -2280,6 +2312,35 @@
                             </td>
                         </tr>
                     </table>
+                    
+                    <div class="winning-summary">
+                        <div class="winning-summary-title">
+                            <i class="fas fa-trophy"></i> 中奖情况统计
+                        </div>
+            `;
+            
+            // 添加我的粤港中奖情况（按奖项）
+            if (Object.keys(myGuangdong.winnings).length > 0) {
+                for (const [type, amount] of Object.entries(myGuangdong.winnings)) {
+                    const amountClass = amount >= 0 ? 'positive' : 'negative';
+                    const sign = amount >= 0 ? '+' : '';
+                    accountHTML += `
+                        <div class="winning-summary-item">
+                            <span class="winning-summary-type">${type}:</span>
+                            <span class="winning-summary-amount ${amountClass}">${sign}${amount.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+            } else {
+                accountHTML += `
+                    <div class="winning-summary-item">
+                        <span class="winning-summary-type">无中奖记录</span>
+                    </div>
+                `;
+            }
+            
+            accountHTML += `
+                    </div>
                 </div>
             `;
             
