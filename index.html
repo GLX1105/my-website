@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单报表系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -18,6 +17,7 @@
             color: #333;
             min-height: 100vh;
             padding: 15px;
+            display: none; /* 初始隐藏内容 */
         }
         
         .container {
@@ -26,6 +26,69 @@
             margin: 0 auto;
             display: flex;
             gap: 20px;
+        }
+        
+        /* 登录界面样式 */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 350px;
+        }
+        
+        .login-box h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .login-btn {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        
+        .login-btn:hover {
+            background: linear-gradient(to right, #2980b9, #2573a7);
+            transform: translateY(-2px);
+        }
+        
+        .login-error {
+            color: #e74c3c;
+            margin-top: 10px;
+            display: none;
         }
         
         /* 左侧主内容区 - 历史记录 */
@@ -204,6 +267,26 @@
             transform: translateY(-1px);
         }
         
+        /* 回收站按钮样式 */
+        .recycle-bin-btn {
+            position: relative;
+        }
+        
+        .recycle-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
         header {
             text-align: center;
             padding: 15px 0;
@@ -261,8 +344,16 @@
             font-size: 0.9rem;
         }
         
-        textarea {
-            width: 100%;
+        /* 订单数据输入框容器 - 新增 */
+        .input-with-categories {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        
+        /* 缩小订单数据输入框宽度 */
+        #orderData {
+            width: 65%; /* 缩小宽度 */
             height: 120px;
             padding: 12px;
             border: 1px solid #ddd;
@@ -270,65 +361,23 @@
             font-size: 0.9rem;
             resize: vertical;
             transition: border-color 0.3s;
+            color: #333; /* 正常文字颜色 */
+            font-style: normal; /* 正常字体样式 */
         }
         
-        textarea:focus {
+        #orderData:focus {
             outline: none;
             border-color: #3498db;
             box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
         
-        /* 紧凑日期选择器样式 */
-        .date-selector-container {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 6px 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-weight: 600;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border: 1px solid #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 0.9rem;
-        }
-        
-        .date-selector-container label {
-            margin-bottom: 0;
-            color: white;
-            font-weight: normal;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.85rem;
-        }
-        
-        .date-input {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 0.85rem;
-            color: #333;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .date-input:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
-        }
-        
-        /* 分类按钮组样式 */
+        /* 分类按钮组样式 - 移到右侧 */
         .category-button-group {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 8px;
-            margin-top: 5px;
+            width: 35%; /* 占据剩余宽度 */
+            min-width: 180px; /* 最小宽度 */
         }
         
         .category-btn {
@@ -344,6 +393,7 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            justify-content: center;
         }
         
         .category-btn:hover {
@@ -395,6 +445,30 @@
             box-shadow: 0 4px 8px rgba(52, 152, 219, 0.4);
         }
         
+        .btn-primary.loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .btn-primary.loading::after {
+            content: "";
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            width: 16px;
+            height: 16px;
+            margin-top: -8px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
         .btn-secondary {
             background: linear-gradient(to right, #2ecc71, #27ae60);
             color: white;
@@ -414,6 +488,18 @@
         }
         
         .btn-warning:hover {
+            background: linear-gradient(to right, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-danger:hover {
             background: linear-gradient(to right, #c0392b, #a93226);
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(231, 76, 60, 0.4);
@@ -791,6 +877,13 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .confirm-dialog.show {
+            display: flex;
+            opacity: 1;
         }
         
         .confirm-content {
@@ -801,6 +894,12 @@
             max-width: 400px;
             width: 90%;
             text-align: center;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .confirm-dialog.show .confirm-content {
+            transform: translateY(0);
         }
         
         .confirm-buttons {
@@ -981,6 +1080,246 @@
             cursor: pointer;
         }
         
+        /* Toast通知样式 */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+        
+        .toast {
+            background: white;
+            color: #2c3e50;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .toast.warning {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .toast i {
+            font-size: 1.2rem;
+        }
+        
+        /* 回收站面板 */
+        .recycle-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1500;
+            transition: right 0.3s ease;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .recycle-panel.open {
+            right: 0;
+        }
+        
+        .recycle-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .close-recycle-panel {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .recycle-item {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+        }
+        
+        .recycle-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .restore-btn, .delete-permanently-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .restore-btn {
+            color: #27ae60;
+        }
+        
+        .restore-btn:hover {
+            background: rgba(39, 174, 96, 0.1);
+        }
+        
+        .delete-permanently-btn {
+            color: #e74c3c;
+        }
+        
+        .delete-permanently-btn:hover {
+            background: rgba(231, 76, 60, 0.1);
+        }
+        
+        /* 批量操作工具栏 */
+        .batch-operations {
+            background: white;
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .batch-operations.show {
+            display: flex;
+        }
+        
+        .batch-info {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-right: 10px;
+        }
+        
+        .select-all-checkbox {
+            margin-right: 10px;
+        }
+        
+        /* 历史记录卡片选择框 */
+        .history-card-select {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 10;
+        }
+        
+        /* 回收站项目选择框 */
+        .recycle-item-select {
+            margin-right: 8px;
+        }
+        
+        /* 高亮显示的用户名和分类 */
+        .highlight-applicant {
+            color: #ffeb3b !important; /* 亮黄色 */
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .highlight-category {
+            color: #00ff7f !important; /* 春绿色 */
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        /* 密码保护对话框 */
+        .password-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .password-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 350px;
+        }
+        
+        .password-content h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .password-btn {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .password-btn:hover {
+            background: linear-gradient(to right, #2980b9, #2573a7);
+            transform: translateY(-2px);
+        }
+        
+        .password-cancel {
+            background: #95a5a6;
+        }
+        
+        .password-cancel:hover {
+            background: #7f8c8d;
+        }
+        
+        .password-error {
+            color: #e74c3c;
+            margin-top: 10px;
+            display: none;
+        }
+        
         /* 响应式设计 - 移动端优化 */
         @media (max-width: 1400px) {
             .container {
@@ -1003,6 +1342,28 @@
             
             .user-card {
                 width: calc(50% - 8px); /* 中等屏幕两列 */
+            }
+        }
+        
+        @media (max-width: 992px) {
+            /* 平板设备：输入框和按钮组垂直排列 */
+            .input-with-categories {
+                flex-direction: column;
+            }
+            
+            #orderData {
+                width: 100%; /* 恢复全宽 */
+            }
+            
+            .category-button-group {
+                width: 100%; /* 恢复全宽 */
+                flex-direction: row; /* 按钮横向排列 */
+                flex-wrap: wrap;
+            }
+            
+            .category-btn {
+                flex: 1;
+                min-width: 120px;
             }
         }
         
@@ -1110,6 +1471,16 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+            
+            .recycle-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .batch-operations {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1152,7 +1523,32 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 登录界面 -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2><i class="fas fa-lock"></i> 系统访问受限</h2>
+            <p>欢迎使用订单报表系统</p>
+            <input type="password" id="accessPassword" class="login-input" placeholder="输入访问密码">
+            <div class="login-error" id="loginError">密码错误，请重试！</div>
+            <button class="login-btn" onclick="checkAccessPassword()">进入系统</button>
+        </div>
+    </div>
+    
+    <!-- 密码保护对话框 -->
+    <div class="password-dialog" id="passwordDialog">
+        <div class="password-content">
+            <h3><i class="fas fa-shield-alt"></i> 操作需要密码验证</h3>
+            <p id="passwordPromptText">请输入操作密码</p>
+            <input type="password" id="operationPassword" class="password-input" placeholder="输入密码">
+            <div class="password-error" id="passwordError">密码错误，请重试！</div>
+            <button class="password-btn" id="passwordSubmitBtn" onclick="verifyOperationPassword()">确认</button>
+            <button class="password-btn password-cancel" onclick="closePasswordDialog()">取消</button>
+        </div>
+    </div>
+    
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <div class="container" id="mainContainer" style="display: none;">
         <!-- 左侧主内容区 -->
         <div class="main-content">
             <!-- 紧凑导航栏 -->
@@ -1168,7 +1564,11 @@
                     <button class="nav-btn" onclick="exportAllRecords()">
                         <i class="fas fa-file-export"></i> 导出
                     </button>
-                    <button class="nav-btn" onclick="showClearConfirm()">
+                    <button class="nav-btn recycle-bin-btn" onclick="toggleRecyclePanel()">
+                        <i class="fas fa-trash-restore"></i> 回收站
+                        <span class="recycle-badge" id="recycleBadge">0</span>
+                    </button>
+                    <button class="nav-btn" onclick="requestClearPassword()">
                         <i class="fas fa-trash-alt"></i> 清空
                     </button>
                 </div>
@@ -1176,7 +1576,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（三列布局优化版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（提示移除版）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -1193,25 +1593,25 @@
                 
                 <div class="input-group">
                     <label for="orderData">订单数据录入</label>
-                    <textarea id="orderData" placeholder="" style="color: #999; font-style: italic;" 
-                        title="请输入订单数据，格式如：申报人：XXX&#10;订单金额明细：...&#10;中奖情况：...&#10;盈亏情况：..."></textarea>
-                </div>
-                
-                <div class="input-group">
-                    <label>分类</label>
-                    <div class="category-button-group">
-                        <button class="category-btn" data-category="澳门上家" onclick="selectCategory(this, '澳门上家')">
-                            <i class="fas fa-arrow-up"></i> 澳门上家
-                        </button>
-                        <button class="category-btn active" data-category="澳门下家" onclick="selectCategory(this, '澳门下家')">
-                            <i class="fas fa-arrow-down"></i> 澳门下家
-                        </button>
-                        <button class="category-btn" data-category="粤港上家" onclick="selectCategory(this, '粤港上家')">
-                            <i class="fas fa-arrow-up"></i> 粤港上家
-                        </button>
-                        <button class="category-btn" data-category="粤港下家" onclick="selectCategory(this, '粤港下家')">
-                            <i class="fas fa-arrow-down"></i> 粤港下家
-                        </button>
+                    <!-- 新增：输入框和分类按钮容器 -->
+                    <div class="input-with-categories">
+                        <!-- 移除placeholder提示 -->
+                        <textarea id="orderData"></textarea>
+                        <!-- 分类按钮组移到这里 -->
+                        <div class="category-button-group">
+                            <button class="category-btn" data-category="澳门上家" onclick="selectCategory(this, '澳门上家')">
+                                <i class="fas fa-arrow-up"></i> 澳门上家
+                            </button>
+                            <button class="category-btn active" data-category="澳门下家" onclick="selectCategory(this, '澳门下家')">
+                                <i class="fas fa-arrow-down"></i> 澳门下家
+                            </button>
+                            <button class="category-btn" data-category="粤港上家" onclick="selectCategory(this, '粤港上家')">
+                                <i class="fas fa-arrow-up"></i> 粤港上家
+                            </button>
+                            <button class="category-btn" data-category="粤港下家" onclick="selectCategory(this, '粤港下家')">
+                                <i class="fas fa-arrow-down"></i> 粤港下家
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -1224,7 +1624,7 @@
                 </div>
                 
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="saveRecord()">
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveRecord()">
                         <i class="fas fa-save"></i> 保存报表
                     </button>
                     <button class="btn btn-secondary" onclick="clearInput()">
@@ -1244,6 +1644,20 @@
                         <input type="date" id="historyDateFilter" class="history-date-input">
                     </div>
                 </div>
+                
+                <!-- 批量操作工具栏 -->
+                <div class="batch-operations" id="historyBatchOperations">
+                    <span class="batch-info">已选择 <span id="selectedCount">0</span> 项</span>
+                    <input type="checkbox" class="select-all-checkbox" id="selectAllHistory" onchange="toggleSelectAll('history')">
+                    <label for="selectAllHistory">全选</label>
+                    <button class="btn btn-danger" onclick="batchDelete('history')">
+                        <i class="fas fa-trash"></i> 批量删除
+                    </button>
+                    <button class="btn btn-warning" onclick="batchMoveToRecycle('history')">
+                        <i class="fas fa-trash-alt"></i> 批量移至回收站
+                    </button>
+                </div>
+                
                 <div class="history-container" id="historyContainer">
                     <div class="empty-history">
                         <i class="fas fa-clock" style="font-size: 2.5rem; margin-bottom: 10px; color: #bdc3c7;"></i>
@@ -1336,14 +1750,44 @@
         </div>
     </div>
     
+    <!-- 回收站面板 -->
+    <div class="recycle-panel" id="recyclePanel">
+        <div class="recycle-panel-header">
+            <h3><i class="fas fa-trash-restore"></i> 回收站</h3>
+            <button class="close-recycle-panel" onclick="toggleRecyclePanel()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- 回收站批量操作工具栏 -->
+        <div class="batch-operations" id="recycleBatchOperations">
+            <span class="batch-info">已选择 <span id="recycleSelectedCount">0</span> 项</span>
+            <input type="checkbox" class="select-all-checkbox" id="selectAllRecycle" onchange="toggleSelectAll('recycle')">
+            <label for="selectAllRecycle">全选</label>
+            <button class="btn btn-secondary" onclick="batchRestore('recycle')">
+                <i class="fas fa-undo"></i> 批量恢复
+            </button>
+            <button class="btn btn-danger" onclick="batchDeletePermanent('recycle')">
+                <i class="fas fa-trash"></i> 批量永久删除
+            </button>
+        </div>
+        
+        <div id="recycleItemsContainer">
+            <div class="empty-history">
+                <i class="fas fa-trash" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                <p>回收站为空</p>
+            </div>
+        </div>
+    </div>
+    
     <!-- 隐藏的文件输入 -->
     <input type="file" id="fileInput" class="file-input" accept=".txt,.csv" onchange="importData(event)">
     
     <!-- 确认对话框 -->
     <div class="confirm-dialog" id="confirmDialog">
         <div class="confirm-content">
-            <h3 id="confirmTitle">确认清空数据</h3>
-            <p id="confirmMessage">确定要清空所有历史记录和当前数据吗？</p>
+            <h3 id="confirmTitle">确认删除</h3>
+            <p id="confirmMessage">确定要删除这条订单报表吗？此操作将移至回收站。</p>
             <div class="confirm-buttons">
                 <button class="confirm-btn confirm-yes" id="confirmYesBtn">确定</button>
                 <button class="confirm-btn confirm-no" onclick="hideClearConfirm()">取消</button>
@@ -1376,21 +1820,92 @@
     <script>
         // 存储所有历史记录（使用localStorage持久化）
         let historyRecords = [];
+        let recycleBin = []; // 回收站数据
         let currentDeleteId = null;
         let pendingRecord = null; // 待保存的记录（用于重复确认后）
         let selectedCategory = '澳门下家'; // 默认选中的分类
+        let saveTimeout = null; // 防抖定时器
+        let summaryCache = {}; // 汇总数据缓存
+        let selectedHistoryIds = new Set(); // 选中的历史记录ID
+        let selectedRecycleIds = new Set(); // 选中的回收站记录ID
+        let currentOperation = null; // 当前操作类型
         
-        // 页面加载时从localStorage读取历史记录并设置日期选择器默认值（真实当前日期）
+        // 页面加载时显示登录界面
         window.onload = function() {
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainContainer').style.display = 'none';
+            document.body.style.display = 'block';
+            
+            // 添加回车键保存功能
+            document.getElementById('orderData').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // 阻止默认换行行为
+                    saveRecord(); // 触发保存
+                }
+            });
+        };
+        
+        // 检查访问密码
+        function checkAccessPassword() {
+            const password = document.getElementById('accessPassword').value;
+            const errorElement = document.getElementById('loginError');
+            
+            if (password === "160601") {
+                // 密码正确，显示主界面
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainContainer').style.display = 'flex';
+                initSystem();
+            } else {
+                // 密码错误，显示错误信息
+                errorElement.style.display = 'block';
+                document.getElementById('accessPassword').value = '';
+                document.getElementById('accessPassword').focus();
+            }
+        }
+        
+        // 初始化系统
+        function initSystem() {
             loadFromLocalStorage();
-            initDatePickers(); // 初始化所有日期选择器
+            initDatePickers();
             updateHistoryDisplay();
             updateUserCardsDisplay();
-            updateSummaryDisplay(); // 更新汇总显示
-            updateMyAccountCards(); // 更新我的账户卡片
-            populateFilterOptions(); // 填充筛选器选项
-            setInitialCategory(); // 设置初始选中的分类按钮
-        };
+            updateSummaryDisplay();
+            updateMyAccountCards();
+            updateRecycleBadge();
+            populateFilterOptions();
+            setInitialCategory();
+        }
+        
+        // 请求清空密码
+        function requestClearPassword() {
+            currentOperation = 'clear';
+            document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码;
+            document.getElementById('passwordDialog').style.display = 'flex';
+            document.getElementById('operationPassword').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            document.getElementById('operationPassword').focus();
+        }
+        
+        // 验证操作密码
+        function verifyOperationPassword() {
+            const password = document.getElementById('operationPassword').value;
+            const errorElement = document.getElementById('passwordError');
+            
+            if (currentOperation === 'clear' && password === "891105") {
+                closePasswordDialog();
+                showClearConfirm();
+            } else {
+                errorElement.style.display = 'block';
+                document.getElementById('operationPassword').value = '';
+                document.getElementById('operationPassword').focus();
+            }
+        }
+        
+        // 关闭密码对话框
+        function closePasswordDialog() {
+            document.getElementById('passwordDialog').style.display = 'none';
+            currentOperation = null;
+        }
         
         // 初始化所有日期选择器
         function initDatePickers() {
@@ -1470,21 +1985,53 @@
             });
         }
         
-        // 保存记录到localStorage
+        // 保存记录到localStorage（防抖优化）
         function saveToLocalStorage() {
-            localStorage.setItem('orderReportHistory', JSON.stringify(historyRecords));
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem('orderReportHistory', JSON.stringify(historyRecords));
+                localStorage.setItem('recycleBin', JSON.stringify(recycleBin));
+            }, 500);
         }
         
         // 从localStorage读取历史记录
         function loadFromLocalStorage() {
             const savedRecords = localStorage.getItem('orderReportHistory');
+            const savedRecycleBin = localStorage.getItem('recycleBin');
             if (savedRecords) {
                 historyRecords = JSON.parse(savedRecords);
             }
+            if (savedRecycleBin) {
+                recycleBin = JSON.parse(savedRecycleBin);
+            }
+        }
+        
+        // 显示Toast通知
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i>
+                <span>${message}</span>
+            `;
+            toastContainer.appendChild(toast);
+            
+            // 触发显示动画
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toastContainer.removeChild(toast), 300);
+            }, 3000);
         }
         
         // 保存记录（带防重复检查）
         function saveRecord() {
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.classList.add('loading'); // 显示加载状态
+            
             const orderDataInput = document.getElementById('orderData').value;
             const errorMsg = document.getElementById('errorMsg');
             const successMsg = document.getElementById('successMsg');
@@ -1542,6 +2089,7 @@
                 if (isDuplicate) {
                     // 如果有重复，显示警告对话框
                     showDuplicateWarning(selectedDate, applicantName, orderDataInput);
+                    saveBtn.classList.remove('loading');
                     return;
                 }
                 
@@ -1554,6 +2102,8 @@
                 errorMsg.textContent = e.message;
                 errorMsg.style.display = 'block';
                 successMsg.style.display = 'none';
+                showToast(e.message, 'error');
+                saveBtn.classList.remove('loading');
                 console.error(e);
             }
         }
@@ -1674,12 +2224,12 @@
                 orderDataInput: orderDataInput
             };
             
-            duplicateDialog.style.display = 'flex';
+            duplicateDialog.classList.add('show');
         }
         
         // 隐藏重复警告对话框
         function hideDuplicateDialog() {
-            document.getElementById('duplicateDialog').style.display = 'none';
+            document.getElementById('duplicateDialog').classList.remove('show');
             pendingRecord = null;
         }
         
@@ -1719,6 +2269,7 @@
                                 orderData, dataCount, extractedData) {
             const errorMsg = document.getElementById('errorMsg');
             const successMsg = document.getElementById('successMsg');
+            const saveBtn = document.getElementById('saveBtn');
             
             try {
                 // 生成动态表格（已移除申报人显示）
@@ -1741,6 +2292,9 @@
                 // 添加到历史记录数组（最新的在最前面）
                 historyRecords.unshift(record);
                 
+                // 更新缓存
+                updateSummaryCache();
+                
                 // 保存到localStorage
                 saveToLocalStorage();
                 
@@ -1759,19 +2313,28 @@
                 // 更新筛选器选项
                 populateFilterOptions();
                 
+                // 更新回收站徽章
+                updateRecycleBadge();
+                
                 // 清除输入框（保留日期选择）
                 document.getElementById('orderData').value = '';
                 
                 // 显示成功消息
                 errorMsg.style.display = 'none';
                 successMsg.style.display = 'block';
-                setTimeout(() => successMsg.style.display = 'none', 3000);
+                showToast('报表已成功保存！', 'success');
+                setTimeout(() => {
+                    successMsg.style.display = 'none';
+                    saveBtn.classList.remove('loading');
+                }, 3000);
                 
             } catch (e) {
                 // 显示错误
                 errorMsg.textContent = e.message;
                 errorMsg.style.display = 'block';
                 successMsg.style.display = 'none';
+                showToast(e.message, 'error');
+                saveBtn.classList.remove('loading');
                 console.error(e);
             }
         }
@@ -1959,15 +2522,20 @@
             
             let historyHTML = '';
             filteredRecords.forEach((record, index) => {
+                const isSelected = selectedHistoryIds.has(record.id);
                 historyHTML += `
-                    <div class="history-card">
+                    <div class="history-card" data-id="${record.id}">
+                        <div class="history-card-select">
+                            <input type="checkbox" class="history-checkbox" ${isSelected ? 'checked' : ''} 
+                                   onchange="toggleHistorySelection(${record.id}, this.checked)">
+                        </div>
                         <div class="history-header">
                             <div>
-                                <span class="category-tag" style="background: rgba(52, 152, 219, 0.2); color: #2980b9; margin-right: 8px;">
+                                <span class="category-tag highlight-applicant">
                                     <i class="fas fa-user"></i> ${record.applicant}
                                 </span>
                                 <span>订单报表 #${index + 1}</span>
-                                <span class="category-tag ${getCategoryClass(record.category)}">${record.category}</span>
+                                <span class="category-tag ${getCategoryClass(record.category)} highlight-category">${record.category}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span class="history-time">${record.timestamp}</span>
@@ -1987,6 +2555,302 @@
             });
             
             historyContainer.innerHTML = historyHTML;
+            updateBatchOperationsVisibility();
+        }
+        
+        // 显示删除确认对话框
+        function showDeleteConfirm(recordId) {
+            currentDeleteId = recordId;
+            const confirmDialog = document.getElementById('confirmDialog');
+            const confirmTitle = document.getElementById('confirmTitle');
+            const confirmMessage = document.getElementById('confirmMessage');
+            const confirmYesBtn = document.getElementById('confirmYesBtn');
+            
+            confirmTitle.textContent = '确认删除';
+            confirmMessage.textContent = '确定要删除这条订单报表吗？此操作将移至回收站。';
+            confirmYesBtn.textContent = '确定';
+            confirmYesBtn.onclick = function() {
+                moveToRecycleBin(currentDeleteId);
+                hideClearConfirm();
+            };
+            
+            confirmDialog.classList.add('show');
+        }
+        
+        // 隐藏确认对话框
+        function hideClearConfirm() {
+            document.getElementById('confirmDialog').classList.remove('show');
+        }
+        
+        // 移动记录到回收站
+        function moveToRecycleBin(recordId) {
+            const recordIndex = historyRecords.findIndex(r => r.id === recordId);
+            if (recordIndex === -1) return;
+            
+            const [deletedRecord] = historyRecords.splice(recordIndex, 1);
+            deletedRecord.deletedAt = new Date().toISOString();
+            recycleBin.unshift(deletedRecord);
+            
+            // 从选中集合中移除
+            selectedHistoryIds.delete(recordId);
+            
+            // 更新缓存和显示
+            updateSummaryCache();
+            saveToLocalStorage();
+            updateHistoryDisplay();
+            updateUserCardsDisplay();
+            updateSummaryDisplay();
+            updateMyAccountCards();
+            updateRecycleBadge();
+            populateFilterOptions();
+            
+            showToast('已移至回收站', 'warning');
+        }
+        
+        // 从回收站恢复记录
+        function restoreFromRecycleBin(recordId) {
+            const recordIndex = recycleBin.findIndex(r => r.id === recordId);
+            if (recordIndex === -1) return;
+            
+            const [restoredRecord] = recycleBin.splice(recordIndex, 1);
+            delete restoredRecord.deletedAt;
+            historyRecords.unshift(restoredRecord);
+            
+            // 从选中集合中移除
+            selectedRecycleIds.delete(recordId);
+            
+            // 更新缓存和显示
+            updateSummaryCache();
+            saveToLocalStorage();
+            updateHistoryDisplay();
+            updateUserCardsDisplay();
+            updateSummaryDisplay();
+            updateMyAccountCards();
+            updateRecycleBadge();
+            populateFilterOptions();
+            toggleRecyclePanel();
+            
+            showToast('已恢复至原位置', 'success');
+        }
+        
+        // 永久删除回收站记录
+        function deletePermanently(recordId) {
+            recycleBin = recycleBin.filter(r => r.id !== recordId);
+            
+            // 从选中集合中移除
+            selectedRecycleIds.delete(recordId);
+            
+            saveToLocalStorage();
+            updateRecycleBadge();
+            renderRecycleItems();
+            updateBatchOperationsVisibility();
+            showToast('已永久删除', 'error');
+        }
+        
+        // 更新回收站徽章
+        function updateRecycleBadge() {
+            document.getElementById('recycleBadge').textContent = recycleBin.length;
+        }
+        
+        // 切换回收站面板
+        function toggleRecyclePanel() {
+            const panel = document.getElementById('recyclePanel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) {
+                renderRecycleItems();
+            }
+        }
+        
+        // 渲染回收站项目
+        function renderRecycleItems() {
+            const container = document.getElementById('recycleItemsContainer');
+            if (recycleBin.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-history">
+                        <i class="fas fa-trash" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
+                        <p>回收站为空</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let itemsHTML = '';
+            recycleBin.forEach(record => {
+                const isSelected = selectedRecycleIds.has(record.id);
+                itemsHTML += `
+                    <div class="recycle-item" data-id="${record.id}">
+                        <div class="recycle-item-header">
+                            <div style="display: flex; align-items: center;">
+                                <input type="checkbox" class="recycle-checkbox recycle-item-select" ${isSelected ? 'checked' : ''} 
+                                       onchange="toggleRecycleSelection(${record.id}, this.checked)">
+                                <div>
+                                    <strong class="highlight-applicant">${record.applicant}</strong> - ${record.timestamp}
+                                    <span class="category-tag ${getCategoryClass(record.category)} highlight-category">${record.category}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="restore-btn" onclick="restoreFromRecycleBin(${record.id})">
+                                    <i class="fas fa-undo"></i> 恢复
+                                </button>
+                                <button class="delete-permanently-btn" onclick="deletePermanently(${record.id})">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="recycle-item-content">
+                            ${record.compensationCardHTML}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = itemsHTML;
+            updateBatchOperationsVisibility();
+        }
+        
+        // 切换历史记录选择状态
+        function toggleHistorySelection(recordId, isSelected) {
+            if (isSelected) {
+                selectedHistoryIds.add(recordId);
+            } else {
+                selectedHistoryIds.delete(recordId);
+            }
+            updateBatchOperationsVisibility();
+        }
+        
+        // 切换回收站记录选择状态
+        function toggleRecycleSelection(recordId, isSelected) {
+            if (isSelected) {
+                selectedRecycleIds.add(recordId);
+            } else {
+                selectedRecycleIds.delete(recordId);
+            }
+            updateBatchOperationsVisibility();
+        }
+        
+        // 全选/取消全选
+        function toggleSelectAll(type) {
+            if (type === 'history') {
+                const selectAllCheckbox = document.getElementById('selectAllHistory');
+                const checkboxes = document.querySelectorAll('.history-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                    const recordId = parseInt(checkbox.closest('.history-card').dataset.id);
+                    if (selectAllCheckbox.checked) {
+                        selectedHistoryIds.add(recordId);
+                    } else {
+                        selectedHistoryIds.delete(recordId);
+                    }
+                });
+            } else if (type === 'recycle') {
+                const selectAllCheckbox = document.getElementById('selectAllRecycle');
+                const checkboxes = document.querySelectorAll('.recycle-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                    const recordId = parseInt(checkbox.closest('.recycle-item').dataset.id);
+                    if (selectAllCheckbox.checked) {
+                        selectedRecycleIds.add(recordId);
+                    } else {
+                        selectedRecycleIds.delete(recordId);
+                    }
+                });
+            }
+            updateBatchOperationsVisibility();
+        }
+        
+        // 更新批量操作工具栏显示状态
+        function updateBatchOperationsVisibility() {
+            const historyBatchOps = document.getElementById('historyBatchOperations');
+            const recycleBatchOps = document.getElementById('recycleBatchOperations');
+            const selectedCountSpan = document.getElementById('selectedCount');
+            const recycleSelectedCountSpan = document.getElementById('recycleSelectedCount');
+            
+            // 更新历史记录批量操作
+            if (selectedHistoryIds.size > 0) {
+                historyBatchOps.classList.add('show');
+                selectedCountSpan.textContent = selectedHistoryIds.size;
+            } else {
+                historyBatchOps.classList.remove('show');
+            }
+            
+            // 更新回收站批量操作
+            if (selectedRecycleIds.size > 0) {
+                recycleBatchOps.classList.add('show');
+                recycleSelectedCountSpan.textContent = selectedRecycleIds.size;
+            } else {
+                recycleBatchOps.classList.remove('show');
+            }
+            
+            // 更新全选复选框状态
+            const historyCheckboxes = document.querySelectorAll('.history-checkbox');
+            const recycleCheckboxes = document.querySelectorAll('.recycle-checkbox');
+            
+            if (historyCheckboxes.length > 0) {
+                const selectAllHistory = document.getElementById('selectAllHistory');
+                selectAllHistory.checked = selectedHistoryIds.size === historyRecords.length && historyRecords.length > 0;
+            }
+            
+            if (recycleCheckboxes.length > 0) {
+                const selectAllRecycle = document.getElementById('selectAllRecycle');
+                selectAllRecycle.checked = selectedRecycleIds.size === recycleBin.length && recycleBin.length > 0;
+            }
+        }
+        
+        // 批量删除历史记录
+        function batchDelete(type) {
+            if (type === 'history') {
+                if (selectedHistoryIds.size === 0) return;
+                
+                if (confirm(`确定要删除选中的 ${selectedHistoryIds.size} 条记录吗？此操作将移至回收站。`)) {
+                    selectedHistoryIds.forEach(id => {
+                        moveToRecycleBin(id);
+                    });
+                    selectedHistoryIds.clear();
+                    updateBatchOperationsVisibility();
+                }
+            }
+        }
+        
+        // 批量移动历史记录到回收站
+        function batchMoveToRecycle(type) {
+            if (type === 'history') {
+                if (selectedHistoryIds.size === 0) return;
+                
+                selectedHistoryIds.forEach(id => {
+                    moveToRecycleBin(id);
+                });
+                selectedHistoryIds.clear();
+                updateBatchOperationsVisibility();
+            }
+        }
+        
+        // 批量恢复回收站记录
+        function batchRestore(type) {
+            if (type === 'recycle') {
+                if (selectedRecycleIds.size === 0) return;
+                
+                if (confirm(`确定要恢复选中的 ${selectedRecycleIds.size} 条记录吗？`)) {
+                    selectedRecycleIds.forEach(id => {
+                        restoreFromRecycleBin(id);
+                    });
+                    selectedRecycleIds.clear();
+                    updateBatchOperationsVisibility();
+                }
+            }
+        }
+        
+        // 批量永久删除回收站记录
+        function batchDeletePermanent(type) {
+            if (type === 'recycle') {
+                if (selectedRecycleIds.size === 0) return;
+                
+                if (confirm(`确定要永久删除选中的 ${selectedRecycleIds.size} 条记录吗？此操作不可恢复！`)) {
+                    selectedRecycleIds.forEach(id => {
+                        deletePermanently(id);
+                    });
+                    selectedRecycleIds.clear();
+                    updateBatchOperationsVisibility();
+                }
+            }
         }
         
         // 更新用户卡片显示（包含分类和日期），支持筛选
@@ -2089,6 +2953,52 @@
             container.innerHTML = cardsHTML;
         }
         
+        // 更新汇总缓存
+        function updateSummaryCache() {
+            summaryCache = {
+                lastUpdated: Date.now(),
+                data: {}
+            };
+            
+            // 定义分类
+            const categories = ['澳门上家', '澳门下家', '粤港上家', '粤港下家'];
+            
+            // 初始化汇总数据
+            categories.forEach(cat => {
+                summaryCache.data[cat] = {
+                    totalAmount: 0,
+                    totalWinning: 0,
+                    totalProfit: 0,
+                    winnings: {}
+                };
+            });
+            
+            // 汇总数据
+            historyRecords.forEach(record => {
+                const catId = record.category;
+                if (summaryCache.data.hasOwnProperty(catId)) {
+                    const data = record.extractedData;
+                    summaryCache.data[catId].totalAmount += parseFloat(data.totalAmount || 0);
+                    
+                    // 计算中奖总金额
+                    let winningSum = 0;
+                    for (const [type, amount] of Object.entries(data.winnings)) {
+                        const amt = parseFloat(amount || 0);
+                        winningSum += amt;
+                        
+                        // 按奖项统计
+                        if (summaryCache.data[catId].winnings[type]) {
+                            summaryCache.data[catId].winnings[type] += amt;
+                        } else {
+                            summaryCache.data[catId].winnings[type] = amt;
+                        }
+                    }
+                    summaryCache.data[catId].totalWinning += winningSum;
+                    summaryCache.data[catId].totalProfit += parseFloat(data.profitLoss || 0);
+                }
+            });
+        }
+        
         // 更新汇总显示（按分类统计中奖情况）- 根据日期筛选
         function updateSummaryDisplay() {
             const container = document.getElementById('summaryContainer');
@@ -2110,6 +3020,11 @@
                 filteredRecords = historyRecords.filter(record => record.timestamp === dateFilter);
             }
             
+            // 使用缓存或重新计算
+            if (!summaryCache.lastUpdated || Date.now() - summaryCache.lastUpdated > 5000) {
+                updateSummaryCache();
+            }
+            
             // 定义分类
             const categories = [
                 { id: '澳门上家', name: '澳门上家', icon: 'fas fa-arrow-up', color: '#3498db' },
@@ -2118,48 +3033,15 @@
                 { id: '粤港下家', name: '粤港下家', icon: 'fas fa-arrow-down', color: '#f1c40f' }
             ];
             
-            // 初始化汇总数据（按分类和奖项）
-            const summaryData = {};
-            categories.forEach(cat => {
-                summaryData[cat.id] = {
-                    totalAmount: 0,     // 订单总额
-                    totalWinning: 0,    // 中奖总金额
-                    totalProfit: 0,     // 盈亏总额
-                    winnings: {}        // 按奖项统计 {奖项名称: 总金额}
-                };
-            });
-            
-            // 汇总数据
-            filteredRecords.forEach(record => {
-                const catId = record.category;
-                if (summaryData.hasOwnProperty(catId)) {
-                    const data = record.extractedData;
-                    summaryData[catId].totalAmount += parseFloat(data.totalAmount || 0);
-                    
-                    // 计算中奖总金额
-                    let winningSum = 0;
-                    for (const [type, amount] of Object.entries(data.winnings)) {
-                        const amt = parseFloat(amount || 0);
-                        winningSum += amt;
-                        
-                        // 按奖项统计
-                        if (summaryData[catId].winnings[type]) {
-                            summaryData[catId].winnings[type] += amt;
-                        } else {
-                            summaryData[catId].winnings[type] = amt;
-                        }
-                    }
-                    summaryData[catId].totalWinning += winningSum;
-                    
-                    summaryData[catId].totalProfit += parseFloat(data.profitLoss || 0);
-                }
-            });
-            
             // 生成汇总HTML（去除订单总数和中奖总金额）
             let summaryHTML = '<div class="summary-container">';
             
             categories.forEach(cat => {
-                const data = summaryData[cat.id];
+                // 使用筛选后的数据或缓存数据
+                const data = dateFilter ? 
+                    calculateCategorySummary(filteredRecords, cat.id) : 
+                    summaryCache.data[cat.id] || { totalAmount: 0, totalProfit: 0, winnings: {} };
+                
                 const profitClass = data.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
                 const profitSign = data.totalProfit >= 0 ? '+' : '';
                 
@@ -2218,6 +3100,37 @@
             container.innerHTML = summaryHTML;
         }
         
+        // 计算分类汇总（用于筛选时）
+        function calculateCategorySummary(records, category) {
+            const summary = {
+                totalAmount: 0,
+                totalWinning: 0,
+                totalProfit: 0,
+                winnings: {}
+            };
+            
+            records.filter(r => r.category === category).forEach(record => {
+                const data = record.extractedData;
+                summary.totalAmount += parseFloat(data.totalAmount || 0);
+                
+                let winningSum = 0;
+                for (const [type, amount] of Object.entries(data.winnings)) {
+                    const amt = parseFloat(amount || 0);
+                    winningSum += amt;
+                    
+                    if (summary.winnings[type]) {
+                        summary.winnings[type] += amt;
+                    } else {
+                        summary.winnings[type] = amt;
+                    }
+                }
+                summary.totalWinning += winningSum;
+                summary.totalProfit += parseFloat(data.profitLoss || 0);
+            });
+            
+            return summary;
+        }
+        
         // 更新我的账户卡片（按奖项类型计算差额）- 根据日期筛选
         function updateMyAccountCards() {
             const container = document.getElementById('myAccountContainer');
@@ -2247,14 +3160,14 @@
                 { id: '粤港下家', name: '粤港下家', icon: 'fas fa-arrow-down', color: '#f1c40f' }
             ];
             
-            // 初始化汇总数据（按分类和奖项）
+            // 初始化汇总数据
             const summaryData = {};
             categories.forEach(cat => {
                 summaryData[cat.id] = {
-                    totalAmount: 0,     // 订单总额
-                    totalWinning: 0,    // 中奖总金额
-                    totalProfit: 0,     // 盈亏总额
-                    winnings: {}        // 按奖项统计 {奖项名称: 总金额}
+                    totalAmount: 0,
+                    totalWinning: 0,
+                    totalProfit: 0,
+                    winnings: {}
                 };
             });
             
@@ -2265,13 +3178,11 @@
                     const data = record.extractedData;
                     summaryData[catId].totalAmount += parseFloat(data.totalAmount || 0);
                     
-                    // 计算中奖总金额
                     let winningSum = 0;
                     for (const [type, amount] of Object.entries(data.winnings)) {
                         const amt = parseFloat(amount || 0);
                         winningSum += amt;
                         
-                        // 按奖项统计
                         if (summaryData[catId].winnings[type]) {
                             summaryData[catId].winnings[type] += amt;
                         } else {
@@ -2279,7 +3190,6 @@
                         }
                     }
                     summaryData[catId].totalWinning += winningSum;
-                    
                     summaryData[catId].totalProfit += parseFloat(data.profitLoss || 0);
                 }
             });
@@ -2447,23 +3357,7 @@
             // 不清空日期选择器，保留用户选择
         }
         
-        // 显示删除确认对话框
-        function showDeleteConfirm(recordId) {
-            currentDeleteId = recordId;
-            const confirmDialog = document.getElementById('confirmDialog');
-            const confirmTitle = document.getElementById('confirmTitle');
-            const confirmMessage = document.getElementById('confirmMessage');
-            const confirmYesBtn = document.getElementById('confirmYesBtn');
-            
-            confirmTitle.textContent = '确认删除';
-            confirmMessage.textContent = '确定要删除这条订单报表吗？此操作不可恢复！';
-            confirmYesBtn.textContent = '删除';
-            confirmYesBtn.onclick = deleteRecord;
-            
-            confirmDialog.style.display = 'flex';
-        }
-        
-        // 显示清空确认对话框
+        // 显示清空确认对话框（带动画）
         function showClearConfirm() {
             const confirmDialog = document.getElementById('confirmDialog');
             const confirmTitle = document.getElementById('confirmTitle');
@@ -2475,55 +3369,26 @@
             confirmYesBtn.textContent = '清空';
             confirmYesBtn.onclick = clearAllData;
             
-            confirmDialog.style.display = 'flex';
-        }
-        
-        // 隐藏确认对话框
-        function hideClearConfirm() {
-            document.getElementById('confirmDialog').style.display = 'none';
-        }
-        
-        // 删除记录
-        function deleteRecord() {
-            if (!currentDeleteId) return;
-            
-            historyRecords = historyRecords.filter(record => record.id !== currentDeleteId);
-            saveToLocalStorage();
-            updateHistoryDisplay();
-            updateUserCardsDisplay();
-            updateSummaryDisplay(); // 更新汇总显示
-            updateMyAccountCards(); // 更新我的账户卡片
-            populateFilterOptions(); // 更新筛选器选项
-            hideClearConfirm();
-            
-            // 显示成功消息
-            const successMsg = document.getElementById('successMsg');
-            successMsg.innerHTML = '<i class="fas fa-check-circle"></i> 报表已删除！';
-            successMsg.style.display = 'block';
-            setTimeout(() => successMsg.style.display = 'none', 3000);
-            
-            currentDeleteId = null;
+            confirmDialog.classList.add('show');
         }
         
         // 清空所有数据（带确认提示）
         function clearAllData() {
             historyRecords = [];
+            recycleBin = [];
+            selectedHistoryIds.clear();
+            selectedRecycleIds.clear();
             saveToLocalStorage();
             updateHistoryDisplay();
             updateUserCardsDisplay();
-            updateSummaryDisplay(); // 更新汇总显示
-            updateMyAccountCards(); // 更新我的账户卡片
-            populateFilterOptions(); // 更新筛选器选项
+            updateSummaryDisplay();
+            updateMyAccountCards();
+            updateRecycleBadge();
+            populateFilterOptions();
             document.getElementById('orderData').value = '';
-            // 重置日期选择器为真实当前日期
             initDatePickers();
             hideClearConfirm();
-            
-            // 显示成功消息
-            const successMsg = document.getElementById('successMsg');
-            successMsg.innerHTML = '<i class="fas fa-check-circle"></i> 所有数据已清空！';
-            successMsg.style.display = 'block';
-            setTimeout(() => successMsg.style.display = 'none', 3000);
+            showToast('所有数据已清空！', 'success');
         }
         
         // 导入数据
@@ -2534,23 +3399,16 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('orderData').value = e.target.result;
-                
-                // 显示成功消息
-                const successMsg = document.getElementById('successMsg');
-                successMsg.innerHTML = '<i class="fas fa-check-circle"></i> 数据导入成功！';
-                successMsg.style.display = 'block';
-                setTimeout(() => successMsg.style.display = 'none', 3000);
+                showToast('数据导入成功！', 'success');
             };
             reader.readAsText(file);
-            
-            // 重置文件输入，允许重复选择同一文件
             event.target.value = '';
         }
         
         // 导出所有记录
         function exportAllRecords() {
             if (historyRecords.length === 0) {
-                alert('没有历史记录可导出！');
+                showToast('没有历史记录可导出！', 'error');
                 return;
             }
             
@@ -2567,7 +3425,22 @@
             a.download = `订单报表历史记录_${new Date().toISOString().slice(0, 10)}.txt`;
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 0);
+            showToast('导出成功！', 'success');
         }
+        
+        // 监听登录输入框的回车事件
+        document.getElementById('accessPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAccessPassword();
+            }
+        });
+        
+        // 监听操作密码输入框的回车事件
+        document.getElementById('operationPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyOperationPassword();
+            }
+        });
     </script>
 </body>
 </html>
