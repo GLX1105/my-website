@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单报表系统（v4.11版）</title>
+    <title>订单报表系统（V4.11版）</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -1636,7 +1636,7 @@
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h2><i class="fas fa-lock"></i> 系统访问受限</h2>
-            <p>请输入访问密码以继续使用订单报表系统</p>
+            <p>欢迎使用订单报表系统</p>
             <input type="password" id="accessPassword" class="login-input" placeholder="输入访问密码">
             <div class="login-error" id="loginError">密码错误，请重试！</div>
             <button class="login-btn" onclick="checkAccessPassword()">进入系统</button>
@@ -1695,11 +1695,11 @@
                     <button class="nav-btn" onclick="showFormatSelector()">
                         <i class="fas fa-file-export"></i> 导出订单
                     </button>
-                    <button class="nav-btn" onclick="importHistory()">
-                        <i class="fas fa-file-import"></i> 导入历史
+                    <button class="nav-btn" onclick="importAllData()">
+                        <i class="fas fa-database"></i> 导入所有数据
                     </button>
-                    <button class="nav-btn" onclick="exportHistory()">
-                        <i class="fas fa-file-export"></i> 导出历史
+                    <button class="nav-btn" onclick="exportAllData()">
+                        <i class="fas fa-database"></i> 导出所有数据
                     </button>
                     <button class="nav-btn recycle-bin-btn" onclick="toggleRecyclePanel()">
                         <i class="fas fa-trash-restore"></i> 回收站
@@ -1713,7 +1713,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（JSON格式支持版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（V4.11版）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -1919,7 +1919,6 @@
     
     <!-- 隐藏的文件输入 -->
     <input type="file" id="fileInput" class="file-input" accept=".txt,.csv,.json" onchange="importData(event)">
-    <input type="file" id="historyFileInput" class="file-input" accept=".json" onchange="importHistoryData(event)">
     
     <!-- 确认对话框 -->
     <div class="confirm-dialog" id="confirmDialog">
@@ -2018,7 +2017,7 @@
         // 请求清空密码
         function requestClearPassword() {
             currentOperation = 'clear';
-            document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码：891105';
+            document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码';
             document.getElementById('passwordDialog').style.display = 'flex';
             document.getElementById('operationPassword').value = '';
             document.getElementById('passwordError').style.display = 'none';
@@ -3547,18 +3546,150 @@
             showToast('所有数据已清空！', 'success');
         }
         
-        // 导入数据
+        // 导入数据（直接导入到系统，不放入输入框）
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById('orderData').value = e.target.result;
-                showToast('数据导入成功！', 'success');
+                try {
+                    const content = e.target.result;
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (extension === 'json') {
+                        // 解析JSON并导入数据
+                        const importedData = JSON.parse(content);
+                        importAllDataFromJSON(importedData);
+                    } else {
+                        // 对于TXT和CSV，使用原有方式（放入输入框）
+                        document.getElementById('orderData').value = content;
+                        showToast('数据已导入到输入框，请手动保存', 'info');
+                    }
+                } catch (error) {
+                    showToast(`导入失败: ${error.message}`, 'error');
+                    console.error(error);
+                }
             };
             reader.readAsText(file);
             event.target.value = '';
+        }
+        
+        // 从JSON数据导入所有用户数据
+        function importAllDataFromJSON(jsonData) {
+            try {
+                if (!Array.isArray(jsonData)) {
+                    throw new Error("导入的数据不是有效的历史记录数组");
+                }
+                
+                let importedCount = 0;
+                jsonData.forEach(item => {
+                    // 检查数据格式
+                    if (item.originalData && item.timestamp && item.applicant && item.category) {
+                        // 创建新的历史记录对象
+                        const newRecord = {
+                            id: Date.now() + Math.random(), // 确保ID唯一
+                            timestamp: item.timestamp,
+                            category: item.category,
+                            applicant: item.applicant,
+                            originalData: item.originalData,
+                            tableHTML: item.tableHTML || '',
+                            compensationCardHTML: item.compensationCardHTML || '',
+                            dataCount: item.dataCount || 0,
+                            extractedData: item.extractedData || {}
+                        };
+                        
+                        // 添加到历史记录
+                        historyRecords.unshift(newRecord);
+                        importedCount++;
+                    }
+                });
+                
+                // 更新显示
+                updateHistoryDisplay();
+                updateUserCardsDisplay();
+                updateSummaryDisplay();
+                updateMyAccountCards();
+                updateRecycleBadge();
+                populateFilterOptions();
+                saveToLocalStorage();
+                
+                showToast(`成功导入 ${importedCount} 条历史记录！`, 'success');
+            } catch (error) {
+                showToast(`导入失败: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+        
+        // 导入所有数据（从文件）
+        function importAllData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        const importedData = JSON.parse(content);
+                        importAllDataFromJSON(importedData);
+                    } catch (error) {
+                        showToast(`导入失败: ${error.message}`, 'error');
+                        console.error(error);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+        
+        // 导出所有数据
+        function exportAllData() {
+            if (historyRecords.length === 0) {
+                showToast('没有历史记录可导出！', 'error');
+                return;
+            }
+            
+            const jsonContent = JSON.stringify(historyRecords, null, 2);
+            const blob = new Blob([jsonContent], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `订单报表系统_所有数据_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+            showToast('所有数据导出成功！', 'success');
+        }
+        
+        // 显示格式选择器
+        function showFormatSelector() {
+            document.getElementById('formatSelector').style.display = 'flex';
+        }
+        
+        // 关闭格式选择器
+        function closeFormatSelector() {
+            document.getElementById('formatSelector').style.display = 'none';
+        }
+        
+        // 选择导出格式
+        function selectFormat(element, format) {
+            // 移除所有选项的选中状态
+            document.querySelectorAll('.format-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // 设置当前选项为选中状态
+            element.classList.add('selected');
+            exportFormat = format;
+        }
+        
+        // 确认导出
+        function confirmExport() {
+            closeFormatSelector();
+            exportAllRecords();
         }
         
         // 导出所有记录
@@ -3641,107 +3772,6 @@
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 0);
             showToast('JSON导出成功！', 'success');
-        }
-        
-        // 显示格式选择器
-        function showFormatSelector() {
-            document.getElementById('formatSelector').style.display = 'flex';
-        }
-        
-        // 关闭格式选择器
-        function closeFormatSelector() {
-            document.getElementById('formatSelector').style.display = 'none';
-        }
-        
-        // 选择导出格式
-        function selectFormat(element, format) {
-            // 移除所有选项的选中状态
-            document.querySelectorAll('.format-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            
-            // 设置当前选项为选中状态
-            element.classList.add('selected');
-            exportFormat = format;
-        }
-        
-        // 确认导出
-        function confirmExport() {
-            closeFormatSelector();
-            exportAllRecords();
-        }
-        
-        // 导入历史记录
-        function importHistory() {
-            document.getElementById('historyFileInput').click();
-        }
-        
-        // 导入历史记录数据
-        function importHistoryData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    
-                    if (!Array.isArray(importedData)) {
-                        throw new Error("导入的数据不是有效的历史记录数组");
-                    }
-                    
-                    // 合并导入的数据
-                    importedData.forEach(importedRecord => {
-                        // 检查是否已存在相同ID的记录
-                        const existingIndex = historyRecords.findIndex(r => r.id === importedRecord.id);
-                        
-                        if (existingIndex >= 0) {
-                            // 替换现有记录
-                            historyRecords[existingIndex] = importedRecord;
-                        } else {
-                            // 添加新记录
-                            historyRecords.push(importedRecord);
-                        }
-                    });
-                    
-                    // 按时间戳排序（新的在前）
-                    historyRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    
-                    // 更新显示
-                    updateHistoryDisplay();
-                    updateUserCardsDisplay();
-                    updateSummaryDisplay();
-                    updateMyAccountCards();
-                    updateRecycleBadge();
-                    populateFilterOptions();
-                    saveToLocalStorage();
-                    
-                    showToast(`成功导入 ${importedData.length} 条历史记录！`, 'success');
-                } catch (error) {
-                    showToast(`导入失败: ${error.message}`, 'error');
-                    console.error(error);
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
-        
-        // 导出历史记录
-        function exportHistory() {
-            if (historyRecords.length === 0) {
-                showToast('没有历史记录可导出！', 'error');
-                return;
-            }
-            
-            const jsonContent = JSON.stringify(historyRecords, null, 2);
-            const blob = new Blob([jsonContent], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `订单报表历史记录_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 0);
-            showToast('历史记录导出成功！', 'success');
         }
         
         // 监听登录输入框的回车事件
