@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单报表系统（v4.10版）</title>
+    <title>订单报表系统（v4.11版）</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -656,6 +656,25 @@
         .profit-negative {
             color: #e74c3c; /* 红色 */
             font-weight: bold;
+        }
+        
+        /* 盈亏标签样式 */
+        .profit-tag {
+            font-weight: bold;
+            margin-left: 15px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .pay-me {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+        
+        .pay-you {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #c0392b;
         }
         
         /* 用户卡片样式（大卡片内的独立卡片） */
@@ -1521,6 +1540,95 @@
                 font-size: 0.75rem;
             }
         }
+        
+        /* 格式选择器样式 */
+        .format-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        
+        .format-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 350px;
+        }
+        
+        .format-content h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .format-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .format-option {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .format-option:hover {
+            border-color: #3498db;
+            color: #3498db;
+            transform: translateY(-1px);
+        }
+        
+        .format-option.selected {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+        }
+        
+        .format-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .format-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .format-confirm {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .format-cancel {
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -1547,6 +1655,28 @@
         </div>
     </div>
     
+    <!-- 格式选择器 -->
+    <div class="format-selector" id="formatSelector">
+        <div class="format-content">
+            <h3><i class="fas fa-file-export"></i> 选择导出格式</h3>
+            <div class="format-options">
+                <div class="format-option" data-format="txt" onclick="selectFormat(this, 'txt')">
+                    <i class="fas fa-file-alt"></i> TXT 格式
+                </div>
+                <div class="format-option" data-format="csv" onclick="selectFormat(this, 'csv')">
+                    <i class="fas fa-file-csv"></i> CSV 格式
+                </div>
+                <div class="format-option selected" data-format="json" onclick="selectFormat(this, 'json')">
+                    <i class="fas fa-file-code"></i> JSON 格式
+                </div>
+            </div>
+            <div class="format-buttons">
+                <button class="format-btn format-confirm" onclick="confirmExport()">确认导出</button>
+                <button class="format-btn format-cancel" onclick="closeFormatSelector()">取消</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="toast-container" id="toastContainer"></div>
     
     <div class="container" id="mainContainer" style="display: none;">
@@ -1560,10 +1690,16 @@
                 </div>
                 <div class="nav-buttons">
                     <button class="nav-btn" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-file-import"></i> 导入
+                        <i class="fas fa-file-import"></i> 导入订单
                     </button>
-                    <button class="nav-btn" onclick="exportAllRecords()">
-                        <i class="fas fa-file-export"></i> 导出
+                    <button class="nav-btn" onclick="showFormatSelector()">
+                        <i class="fas fa-file-export"></i> 导出订单
+                    </button>
+                    <button class="nav-btn" onclick="importHistory()">
+                        <i class="fas fa-file-import"></i> 导入历史
+                    </button>
+                    <button class="nav-btn" onclick="exportHistory()">
+                        <i class="fas fa-file-export"></i> 导出历史
                     </button>
                     <button class="nav-btn recycle-bin-btn" onclick="toggleRecyclePanel()">
                         <i class="fas fa-trash-restore"></i> 回收站
@@ -1577,7 +1713,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（提示移除版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（JSON格式支持版）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -1782,7 +1918,8 @@
     </div>
     
     <!-- 隐藏的文件输入 -->
-    <input type="file" id="fileInput" class="file-input" accept=".txt,.csv" onchange="importData(event)">
+    <input type="file" id="fileInput" class="file-input" accept=".txt,.csv,.json" onchange="importData(event)">
+    <input type="file" id="historyFileInput" class="file-input" accept=".json" onchange="importHistoryData(event)">
     
     <!-- 确认对话框 -->
     <div class="confirm-dialog" id="confirmDialog">
@@ -1830,6 +1967,7 @@
         let selectedHistoryIds = new Set(); // 选中的历史记录ID
         let selectedRecycleIds = new Set(); // 选中的回收站记录ID
         let currentOperation = null; // 当前操作类型
+        let exportFormat = 'json'; // 默认导出格式
         
         // 页面加载时显示登录界面
         window.onload = function() {
@@ -1880,7 +2018,7 @@
         // 请求清空密码
         function requestClearPassword() {
             currentOperation = 'clear';
-            document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码';
+            document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码：891105';
             document.getElementById('passwordDialog').style.display = 'flex';
             document.getElementById('operationPassword').value = '';
             document.getElementById('passwordError').style.display = 'none';
@@ -2275,7 +2413,8 @@
             try {
                 // 生成动态表格（已移除申报人显示）
                 const tableHTML = createDynamicTableHTML(orderData, dataCount);
-                const compensationCardHTML = createCompensationCardHTML(orderDataInput);
+                // 传递分类信息用于盈亏标签
+                const compensationCardHTML = createCompensationCardHTML(orderDataInput, category);
                 
                 // 创建历史记录对象（包含分类信息）
                 const record = {
@@ -2427,8 +2566,8 @@
             return tableHTML;
         }
         
-        // 创建赔付明细卡片HTML（高亮赔金和盈亏情况）
-        function createCompensationCardHTML(originalData) {
+        // 创建赔付明细卡片HTML（高亮赔金和盈亏情况，添加盈亏标签）
+        function createCompensationCardHTML(originalData, category) {
             if (!originalData) return '';
             
             // 过滤"订单金额明细："到"(共计x条)"的内容
@@ -2451,10 +2590,26 @@
                         const colorClass = isPositive ? 'profit-positive' : 'profit-negative';
                         const sign = isPositive ? '+' : '';
                         
-                        // 重构该行，将金额部分用span包裹
+                        // 根据分类和金额决定标签
+                        let tag = '';
+                        if (category === '澳门下家' || category === '粤港下家') {
+                            if (num > 0) {
+                                tag = '<span class="profit-tag pay-me">付我</span>';
+                            } else if (num < 0) {
+                                tag = '<span class="profit-tag pay-you">付你</span>';
+                            }
+                        } else if (category === '澳门上家' || category === '粤港上家') {
+                            if (num > 0) {
+                                tag = '<span class="profit-tag pay-you">付你</span>';
+                            } else if (num < 0) {
+                                tag = '<span class="profit-tag pay-me">付我</span>';
+                            }
+                        }
+                        
+                        // 重构该行，将金额部分用span包裹，并添加标签
                         const newLine = line.replace(
                             /(盈亏情况：)([\d.-]+)/, 
-                            `$1<span class="${colorClass}">${sign}${amount}</span>`
+                            `$1<span class="${colorClass}">${sign}${amount}</span>${tag}`
                         );
                         processedLines.push(newLine);
                     } else {
@@ -3413,6 +3568,18 @@
                 return;
             }
             
+            // 根据选择的格式导出
+            if (exportFormat === 'json') {
+                exportToJSON();
+            } else if (exportFormat === 'csv') {
+                exportToCSV();
+            } else {
+                exportToTXT();
+            }
+        }
+        
+        // 导出为TXT格式
+        function exportToTXT() {
             let exportContent = '';
             historyRecords.forEach((record, index) => {
                 exportContent += `=== 订单报表 #${index + 1} (${record.timestamp}) [${record.category}] 申报人：${record.applicant} ===\n`;
@@ -3426,7 +3593,155 @@
             a.download = `订单报表历史记录_${new Date().toISOString().slice(0, 10)}.txt`;
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 0);
-            showToast('导出成功！', 'success');
+            showToast('TXT导出成功！', 'success');
+        }
+        
+        // 导出为CSV格式
+        function exportToCSV() {
+            let csvContent = "ID,日期,分类,申报人,订单总额,盈亏情况,中奖情况,原始数据\n";
+            
+            historyRecords.forEach(record => {
+                const data = record.extractedData;
+                const winnings = Object.entries(data.winnings)
+                    .map(([type, amount]) => `${type}:${amount}`)
+                    .join('; ');
+                
+                const row = [
+                    record.id,
+                    record.timestamp,
+                    record.category,
+                    record.applicant,
+                    data.totalAmount,
+                    data.profitLoss,
+                    winnings,
+                    `"${record.originalData.replace(/"/g, '""')}"`
+                ].join(',');
+                
+                csvContent += row + '\n';
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `订单报表历史记录_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+            showToast('CSV导出成功！', 'success');
+        }
+        
+        // 导出为JSON格式
+        function exportToJSON() {
+            const jsonContent = JSON.stringify(historyRecords, null, 2);
+            const blob = new Blob([jsonContent], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `订单报表历史记录_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+            showToast('JSON导出成功！', 'success');
+        }
+        
+        // 显示格式选择器
+        function showFormatSelector() {
+            document.getElementById('formatSelector').style.display = 'flex';
+        }
+        
+        // 关闭格式选择器
+        function closeFormatSelector() {
+            document.getElementById('formatSelector').style.display = 'none';
+        }
+        
+        // 选择导出格式
+        function selectFormat(element, format) {
+            // 移除所有选项的选中状态
+            document.querySelectorAll('.format-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // 设置当前选项为选中状态
+            element.classList.add('selected');
+            exportFormat = format;
+        }
+        
+        // 确认导出
+        function confirmExport() {
+            closeFormatSelector();
+            exportAllRecords();
+        }
+        
+        // 导入历史记录
+        function importHistory() {
+            document.getElementById('historyFileInput').click();
+        }
+        
+        // 导入历史记录数据
+        function importHistoryData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!Array.isArray(importedData)) {
+                        throw new Error("导入的数据不是有效的历史记录数组");
+                    }
+                    
+                    // 合并导入的数据
+                    importedData.forEach(importedRecord => {
+                        // 检查是否已存在相同ID的记录
+                        const existingIndex = historyRecords.findIndex(r => r.id === importedRecord.id);
+                        
+                        if (existingIndex >= 0) {
+                            // 替换现有记录
+                            historyRecords[existingIndex] = importedRecord;
+                        } else {
+                            // 添加新记录
+                            historyRecords.push(importedRecord);
+                        }
+                    });
+                    
+                    // 按时间戳排序（新的在前）
+                    historyRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    // 更新显示
+                    updateHistoryDisplay();
+                    updateUserCardsDisplay();
+                    updateSummaryDisplay();
+                    updateMyAccountCards();
+                    updateRecycleBadge();
+                    populateFilterOptions();
+                    saveToLocalStorage();
+                    
+                    showToast(`成功导入 ${importedData.length} 条历史记录！`, 'success');
+                } catch (error) {
+                    showToast(`导入失败: ${error.message}`, 'error');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        // 导出历史记录
+        function exportHistory() {
+            if (historyRecords.length === 0) {
+                showToast('没有历史记录可导出！', 'error');
+                return;
+            }
+            
+            const jsonContent = JSON.stringify(historyRecords, null, 2);
+            const blob = new Blob([jsonContent], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `订单报表历史记录_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+            showToast('历史记录导出成功！', 'success');
         }
         
         // 监听登录输入框的回车事件
