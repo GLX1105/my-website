@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单报表系统（预览增强版）</title>
+    <title>订单报表系统（V4.12版）</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -632,7 +632,7 @@
             border-radius: 4px 4px 0 0;
         }
         
-        /* 赔付明细内容加粗处理 */
+        /* 赔付明细内容加粗处理 - 重点修改 */
         .compensation-content {
             padding: 8px;
             font-family: monospace;
@@ -640,23 +640,24 @@
             word-break: break-word;
             line-height: 1.4;
             font-size: 0.8rem;
-            font-weight: 500;
+            font-weight: 700; /* 加粗字体 */
+            color: #2c3e50; /* 深色文字 */
         }
         
-        /* 赔付金额高亮样式 */
+        /* 赔付金额高亮样式 - 修改为整数显示 */
         .compensation-amount {
-            color: #e74c3c;
+            color: #e74c3c; /* 红色 */
             font-weight: bold;
         }
         
-        /* 盈亏情况高亮样式 */
+        /* 盈亏情况高亮样式 - 修改为整数显示 */
         .profit-positive {
-            color: #27ae60;
+            color: #27ae60; /* 绿色 */
             font-weight: bold;
         }
         
         .profit-negative {
-            color: #e74c3c;
+            color: #e74c3c; /* 红色 */
             font-weight: bold;
         }
         
@@ -1829,7 +1830,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（预览增强版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（V4.12版）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -2704,7 +2705,7 @@
             return tableHTML;
         }
         
-        // 创建赔付明细卡片HTML（高亮赔金和盈亏情况，添加盈亏标签）
+        // 创建赔付明细卡片HTML（高亮赔金和盈亏情况，添加盈亏标签，文本加粗，所有数字转为整数）
         function createCompensationCardHTML(originalData, category) {
             if (!originalData) return '';
             
@@ -2722,8 +2723,13 @@
                     // 提取金额部分
                     const match = line.match(/盈亏情况：([\d.-]+)/);
                     if (match) {
-                        const amount = match[1];
-                        const num = parseFloat(amount);
+                        // 将金额转为整数（保留负数）
+                        let amount = match[1];
+                        let num = parseFloat(amount);
+                        if (!isNaN(num)) {
+                            amount = Math.trunc(num).toString();
+                        }
+                        
                         const isPositive = num >= 0;
                         const colorClass = isPositive ? 'profit-positive' : 'profit-negative';
                         const sign = isPositive ? '+' : '';
@@ -2754,11 +2760,36 @@
                         processedLines.push(line);
                     }
                 } 
-                // 处理其他行中的赔:金额（红色）
+                // 处理其他行中的赔:金额（红色）和所有数字
                 else {
-                    // 高亮"赔:"后面的金额（红色）
-                    const newLine = line.replace(/(赔:)([\d.]+)/g, 
-                        '$1<span class="compensation-amount">$2</span>');
+                    // 高亮"赔:"后面的金额（红色）并转为整数
+                    let newLine = line.replace(/(赔:)([\d.]+)/g, (match, p1, p2) => {
+                        // 将金额转为整数
+                        let num = parseFloat(p2);
+                        if (!isNaN(num)) {
+                            p2 = Math.trunc(num).toString();
+                        }
+                        return p1 + `<span class="compensation-amount">${p2}</span>`;
+                    });
+                    
+                    // 将行内其他数字也转为整数
+                    newLine = newLine.replace(/(\d+\.\d+)/g, (match) => {
+                        const num = parseFloat(match);
+                        if (!isNaN(num)) {
+                            return Math.trunc(num).toString();
+                        }
+                        return match;
+                    });
+                    
+                    // 处理负数
+                    newLine = newLine.replace(/(-\d+\.\d+)/g, (match) => {
+                        const num = parseFloat(match);
+                        if (!isNaN(num)) {
+                            return Math.trunc(num).toString();
+                        }
+                        return match;
+                    });
+                    
                     processedLines.push(newLine);
                 }
             }
@@ -3199,7 +3230,10 @@
             let cardsHTML = '';
             filteredRecords.forEach(record => {
                 const data = record.extractedData;
-                const profitLoss = parseFloat(data.profitLoss);
+                // 将金额转为整数
+                const totalAmount = Math.trunc(parseFloat(data.totalAmount || 0));
+                const profitLoss = Math.trunc(parseFloat(data.profitLoss || 0));
+                
                 const profitLossClass = profitLoss >= 0 ? 'profit-positive' : 'profit-negative';
                 const profitLossIcon = profitLoss >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
                 const categoryClass = getCategoryClass(record.category);
@@ -3216,7 +3250,7 @@
                         
                         <div class="user-info-row">
                             <span class="info-label">订单总额:</span>
-                            <span class="info-value">${data.totalAmount}</span>
+                            <span class="info-value">${totalAmount}</span>
                         </div>
                         
                         <div class="winning-section">
@@ -3225,12 +3259,13 @@
                             </div>
                 `;
                 
-                // 添加中奖项目（已合并相同奖项）
+                // 添加中奖项目（已合并相同奖项），金额转为整数
                 for (const [type, amount] of Object.entries(data.winnings)) {
+                    const intAmount = Math.trunc(parseFloat(amount || 0));
                     cardsHTML += `
                         <div class="winning-item">
                             <span class="winning-type">${type}:</span>
-                            <span class="winning-amount">${parseFloat(amount).toFixed(2)}</span>
+                            <span class="winning-amount">${intAmount}</span>
                         </div>
                     `;
                 }
@@ -3239,7 +3274,7 @@
                         </div>
                         
                         <div class="profit-loss ${profitLossClass}">
-                            <i class="fas ${profitLossIcon}"></i> 盈亏: ${data.profitLoss}
+                            <i class="fas ${profitLossIcon}"></i> 盈亏: ${profitLoss}
                         </div>
                     </div>
                 `;
@@ -3273,12 +3308,13 @@
                 const catId = record.category;
                 if (summaryCache.data.hasOwnProperty(catId)) {
                     const data = record.extractedData;
-                    summaryCache.data[catId].totalAmount += parseFloat(data.totalAmount || 0);
+                    // 转为整数
+                    summaryCache.data[catId].totalAmount += Math.trunc(parseFloat(data.totalAmount || 0));
                     
                     // 计算中奖总金额
                     let winningSum = 0;
                     for (const [type, amount] of Object.entries(data.winnings)) {
-                        const amt = parseFloat(amount || 0);
+                        const amt = Math.trunc(parseFloat(amount || 0));
                         winningSum += amt;
                         
                         // 按奖项统计
@@ -3289,7 +3325,7 @@
                         }
                     }
                     summaryCache.data[catId].totalWinning += winningSum;
-                    summaryCache.data[catId].totalProfit += parseFloat(data.profitLoss || 0);
+                    summaryCache.data[catId].totalProfit += Math.trunc(parseFloat(data.profitLoss || 0));
                 }
             });
         }
@@ -3337,6 +3373,13 @@
                     calculateCategorySummary(filteredRecords, cat.id) : 
                     summaryCache.data[cat.id] || { totalAmount: 0, totalProfit: 0, winnings: {} };
                 
+                // 转为整数
+                data.totalAmount = Math.trunc(data.totalAmount);
+                data.totalProfit = Math.trunc(data.totalProfit);
+                for (const type in data.winnings) {
+                    data.winnings[type] = Math.trunc(data.winnings[type]);
+                }
+                
                 const profitClass = data.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
                 const profitSign = data.totalProfit >= 0 ? '+' : '';
                 
@@ -3349,12 +3392,12 @@
                         <table class="summary-table">
                             <tr>
                                 <th>订单总额</th>
-                                <td class="summary-value">${data.totalAmount.toFixed(2)}</td>
+                                <td class="summary-value">${data.totalAmount}</td>
                             </tr>
                             <tr>
                                 <th>盈亏总额</th>
                                 <td class="summary-value ${profitClass}">
-                                    ${profitSign}${data.totalProfit.toFixed(2)}
+                                    ${profitSign}${data.totalProfit}
                                 </td>
                             </tr>
                         </table>
@@ -3373,7 +3416,7 @@
                         summaryHTML += `
                             <div class="winning-summary-item">
                                 <span class="winning-summary-type">${type}:</span>
-                                <span class="winning-summary-amount ${amountClass}">${sign}${amount.toFixed(2)}</span>
+                                <span class="winning-summary-amount ${amountClass}">${sign}${amount}</span>
                             </div>
                         `;
                     }
@@ -3406,11 +3449,11 @@
             
             records.filter(r => r.category === category).forEach(record => {
                 const data = record.extractedData;
-                summary.totalAmount += parseFloat(data.totalAmount || 0);
+                summary.totalAmount += Math.trunc(parseFloat(data.totalAmount || 0));
                 
                 let winningSum = 0;
                 for (const [type, amount] of Object.entries(data.winnings)) {
-                    const amt = parseFloat(amount || 0);
+                    const amt = Math.trunc(parseFloat(amount || 0));
                     winningSum += amt;
                     
                     if (summary.winnings[type]) {
@@ -3420,7 +3463,7 @@
                     }
                 }
                 summary.totalWinning += winningSum;
-                summary.totalProfit += parseFloat(data.profitLoss || 0);
+                summary.totalProfit += Math.trunc(parseFloat(data.profitLoss || 0));
             });
             
             return summary;
@@ -3471,11 +3514,11 @@
                 const catId = record.category;
                 if (summaryData.hasOwnProperty(catId)) {
                     const data = record.extractedData;
-                    summaryData[catId].totalAmount += parseFloat(data.totalAmount || 0);
+                    summaryData[catId].totalAmount += Math.trunc(parseFloat(data.totalAmount || 0));
                     
                     let winningSum = 0;
                     for (const [type, amount] of Object.entries(data.winnings)) {
-                        const amt = parseFloat(amount || 0);
+                        const amt = Math.trunc(parseFloat(amount || 0));
                         winningSum += amt;
                         
                         if (summaryData[catId].winnings[type]) {
@@ -3485,7 +3528,7 @@
                         }
                     }
                     summaryData[catId].totalWinning += winningSum;
-                    summaryData[catId].totalProfit += parseFloat(data.profitLoss || 0);
+                    summaryData[catId].totalProfit += Math.trunc(parseFloat(data.profitLoss || 0));
                 }
             });
             
@@ -3540,12 +3583,12 @@
                     <table class="summary-table">
                         <tr>
                             <th>订单总额</th>
-                            <td class="summary-value">${myMacau.totalAmount.toFixed(2)}</td>
+                            <td class="summary-value">${myMacau.totalAmount}</td>
                         </tr>
                         <tr>
                             <th>盈亏总额</th>
                             <td class="summary-value ${myMacau.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative'}">
-                                ${myMacau.totalProfit >= 0 ? '+' : ''}${myMacau.totalProfit.toFixed(2)}
+                                ${myMacau.totalProfit >= 0 ? '+' : ''}${myMacau.totalProfit}
                             </td>
                         </tr>
                     </table>
@@ -3564,7 +3607,7 @@
                     accountHTML += `
                         <div class="winning-summary-item">
                             <span class="winning-summary-type">${type}:</span>
-                            <span class="winning-summary-amount ${amountClass}">${sign}${amount.toFixed(2)}</span>
+                            <span class="winning-summary-amount ${amountClass}">${sign}${amount}</span>
                         </div>
                     `;
                 }
@@ -3589,12 +3632,12 @@
                     <table class="summary-table">
                         <tr>
                             <th>订单总额</th>
-                            <td class="summary-value">${myGuangdong.totalAmount.toFixed(2)}</td>
+                            <td class="summary-value">${myGuangdong.totalAmount}</td>
                         </tr>
                         <tr>
                             <th>盈亏总额</th>
                             <td class="summary-value ${myGuangdong.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative'}">
-                                ${myGuangdong.totalProfit >= 0 ? '+' : ''}${myGuangdong.totalProfit.toFixed(2)}
+                                ${myGuangdong.totalProfit >= 0 ? '+' : ''}${myGuangdong.totalProfit}
                             </td>
                         </tr>
                     </table>
@@ -3613,7 +3656,7 @@
                     accountHTML += `
                         <div class="winning-summary-item">
                             <span class="winning-summary-type">${type}:</span>
-                            <span class="winning-summary-amount ${amountClass}">${sign}${amount.toFixed(2)}</span>
+                            <span class="winning-summary-amount ${amountClass}">${sign}${amount}</span>
                         </div>
                     `;
                 }
@@ -4006,8 +4049,12 @@
             
             historyRecords.forEach(record => {
                 const data = record.extractedData;
+                // 转为整数
+                const totalAmount = Math.trunc(parseFloat(data.totalAmount || 0));
+                const profitLoss = Math.trunc(parseFloat(data.profitLoss || 0));
+                
                 const winnings = Object.entries(data.winnings)
-                    .map(([type, amount]) => `${type}:${amount}`)
+                    .map(([type, amount]) => `${type}:${Math.trunc(parseFloat(amount || 0))}`)
                     .join('; ');
                 
                 const row = [
@@ -4015,8 +4062,8 @@
                     record.timestamp,
                     record.category,
                     record.applicant,
-                    data.totalAmount,
-                    data.profitLoss,
+                    totalAmount,
+                    profitLoss,
                     winnings,
                     `"${record.originalData.replace(/"/g, '""')}"`
                 ].join(',');
