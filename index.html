@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单报表系统（V4.11版）</title>
+    <title>订单报表系统（V4.12版）</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -632,6 +632,7 @@
             border-radius: 4px 4px 0 0;
         }
         
+        /* 赔付明细内容加粗处理 */
         .compensation-content {
             padding: 8px;
             font-family: monospace;
@@ -639,6 +640,7 @@
             word-break: break-word;
             line-height: 1.4;
             font-size: 0.8rem;
+            font-weight: 500; /* 稍微加粗 */
         }
         
         /* 赔付金额高亮样式 */
@@ -811,6 +813,8 @@
             padding: 6px 4px;
             text-align: center;
             word-break: break-all;
+            /* 新增：限制序和下单列的最大宽度 */
+            max-width: 80px;
         }
         
         .dynamic-table th {
@@ -917,7 +921,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-            max-width: 400px;
+            max-width: 500px;
             width: 90%;
             text-align: center;
             transform: translateY(-20px);
@@ -946,18 +950,140 @@
         }
         
         .confirm-yes {
-            background: #e74c3c;
+            background: #2ecc71;
             color: white;
         }
         
         .confirm-no {
-            background: #95a5a6;
+            background: #e74c3c;
             color: white;
         }
         
         .confirm-cancel {
-            background: #3498db;
+            background: #95a5a6;
             color: white;
+        }
+        
+        /* 导入预览对话框样式 */
+        .import-preview-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .import-preview-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+        
+        .import-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .import-preview-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .close-preview-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .import-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .import-list {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        
+        .import-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .import-item:last-child {
+            border-bottom: none;
+        }
+        
+        .import-item-info {
+            flex: 1;
+        }
+        
+        .import-item-status {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-new {
+            background: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+        
+        .status-duplicate {
+            background: rgba(231, 76, 60, 0.2);
+            color: #c0392b;
+        }
+        
+        .import-preview-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
         }
         
         /* 汇总卡片样式 - 三列布局 */
@@ -1439,6 +1565,8 @@
             .dynamic-table th, .dynamic-table td {
                 padding: 4px 2px;
                 font-size: 0.7rem;
+                /* 移动端保持最大宽度限制 */
+                max-width: 80px;
             }
             
             .date-selector-container {
@@ -1507,6 +1635,16 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+            
+            .import-preview-content {
+                width: 95%;
+                padding: 15px;
+            }
+            
+            .import-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1517,6 +1655,8 @@
             
             .dynamic-table th, .dynamic-table td {
                 padding: 3px 1px;
+                /* 超小屏幕保持最大宽度限制 */
+                max-width: 80px;
             }
             
             .date-selector-container {
@@ -1683,6 +1823,44 @@
         </div>
     </div>
     
+    <!-- 导入预览对话框 -->
+    <div class="import-preview-dialog" id="importPreviewDialog">
+        <div class="import-preview-content">
+            <div class="import-preview-header">
+                <h3 class="import-preview-title"><i class="fas fa-file-import"></i> 导入订单预览</h3>
+                <button class="close-preview-btn" onclick="closeImportPreview()">&times;</button>
+            </div>
+            
+            <div class="import-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalImportCount">0</div>
+                    <div class="stat-label">总记录数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="newImportCount">0</div>
+                    <div class="stat-label">新记录</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="duplicateImportCount">0</div>
+                    <div class="stat-label">重复记录</div>
+                </div>
+            </div>
+            
+            <div class="import-list" id="importList">
+                <!-- 导入记录列表将在这里动态生成 -->
+            </div>
+            
+            <div class="import-preview-buttons">
+                <button class="btn btn-primary" onclick="confirmImport()">
+                    <i class="fas fa-check"></i> 确认导入
+                </button>
+                <button class="btn btn-secondary" onclick="closeImportPreview()">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <div class="toast-container" id="toastContainer"></div>
     
     <div class="container" id="mainContainer" style="display: none;">
@@ -1719,7 +1897,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（表格数字加粗版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（导入确认版）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -1973,6 +2151,7 @@
         let selectedRecycleIds = new Set(); // 选中的回收站记录ID
         let currentOperation = null; // 当前操作类型
         let exportFormat = 'json'; // 默认导出格式
+        let pendingImportRecords = []; // 待导入的记录
         
         // 页面加载时显示登录界面
         window.onload = function() {
@@ -2572,7 +2751,7 @@
             return tableHTML;
         }
         
-        // 创建赔付明细卡片HTML（高亮赔金和盈亏情况，添加盈亏标签）
+        // 创建赔付明细卡片HTML（高亮赔金和盈亏情况，添加盈亏标签）- 修改了文本加粗
         function createCompensationCardHTML(originalData, category) {
             if (!originalData) return '';
             
@@ -2634,6 +2813,7 @@
             // 重新拼接行
             filteredContent = processedLines.join('\n');
             
+            // 返回赔付明细卡片HTML（文本已加粗）
             return `
                 <div class="compensation-card">
                     <div class="compensation-header">赔付明细</div>
@@ -3553,7 +3733,7 @@
             showToast('所有数据已清空！', 'success');
         }
         
-        // 导入数据（直接导入到系统，不放入输入框）
+        // 导入数据（带确认预览）
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -3567,7 +3747,7 @@
                     if (extension === 'json') {
                         // 解析JSON并导入数据
                         const importedData = JSON.parse(content);
-                        importAllDataFromJSON(importedData);
+                        prepareImportPreview(importedData);
                     } else {
                         // 对于TXT和CSV，使用原有方式（放入输入框）
                         document.getElementById('orderData').value = content;
@@ -3580,6 +3760,139 @@
             };
             reader.readAsText(file);
             event.target.value = '';
+        }
+        
+        // 准备导入预览
+        function prepareImportPreview(importedData) {
+            if (!Array.isArray(importedData)) {
+                showToast("导入失败: 数据不是有效的历史记录数组", 'error');
+                return;
+            }
+            
+            // 过滤重复记录
+            const newRecords = [];
+            const duplicates = [];
+            
+            importedData.forEach(item => {
+                // 检查数据格式
+                if (item.originalData && item.timestamp && item.applicant) {
+                    // 检查是否重复
+                    const isDuplicate = historyRecords.some(record => {
+                        return record.timestamp === item.timestamp && 
+                               record.applicant === item.applicant &&
+                               extractAmountDetail(record.originalData) === extractAmountDetail(item.originalData);
+                    });
+                    
+                    if (isDuplicate) {
+                        duplicates.push(item);
+                    } else {
+                        newRecords.push(item);
+                    }
+                }
+            });
+            
+            // 存储待导入的新记录
+            pendingImportRecords = newRecords;
+            
+            // 显示预览对话框
+            showImportPreview(newRecords.length, duplicates.length, importedData);
+        }
+        
+        // 显示导入预览对话框
+        function showImportPreview(newCount, duplicateCount, allRecords) {
+            const dialog = document.getElementById('importPreviewDialog');
+            const totalCount = newCount + duplicateCount;
+            
+            // 更新统计信息
+            document.getElementById('totalImportCount').textContent = totalCount;
+            document.getElementById('newImportCount').textContent = newCount;
+            document.getElementById('duplicateImportCount').textContent = duplicateCount;
+            
+            // 生成导入记录列表
+            const listContainer = document.getElementById('importList');
+            listContainer.innerHTML = '';
+            
+            allRecords.slice(0, 10).forEach((record, index) => { // 只显示前10条
+                const isDuplicate = historyRecords.some(existing => 
+                    existing.timestamp === record.timestamp && 
+                    existing.applicant === record.applicant &&
+                    extractAmountDetail(existing.originalData) === extractAmountDetail(record.originalData)
+                );
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'import-item';
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'import-item-info';
+                infoDiv.innerHTML = `
+                    <div><strong>${record.applicant}</strong> - ${record.timestamp}</div>
+                    <div class="category-tag ${getCategoryClass(record.category || '未知分类')}">${record.category || '未知分类'}</div>
+                `;
+                
+                const statusDiv = document.createElement('div');
+                statusDiv.className = `import-item-status ${isDuplicate ? 'status-duplicate' : 'status-new'}`;
+                statusDiv.textContent = isDuplicate ? '重复' : '新记录';
+                
+                itemDiv.appendChild(infoDiv);
+                itemDiv.appendChild(statusDiv);
+                listContainer.appendChild(itemDiv);
+            });
+            
+            if (allRecords.length > 10) {
+                const moreDiv = document.createElement('div');
+                moreDiv.className = 'import-item';
+                moreDiv.innerHTML = `<div class="import-item-info">...还有 ${allRecords.length - 10} 条记录未显示</div>`;
+                listContainer.appendChild(moreDiv);
+            }
+            
+            // 显示对话框
+            dialog.style.display = 'flex';
+        }
+        
+        // 关闭导入预览
+        function closeImportPreview() {
+            document.getElementById('importPreviewDialog').style.display = 'none';
+            pendingImportRecords = [];
+        }
+        
+        // 确认导入
+        function confirmImport() {
+            if (pendingImportRecords.length === 0) {
+                showToast('没有新记录可导入', 'warning');
+                closeImportPreview();
+                return;
+            }
+            
+            // 添加新记录到历史记录
+            pendingImportRecords.forEach(item => {
+                // 创建新的历史记录对象
+                const newRecord = {
+                    id: Date.now() + Math.random(), // 确保ID唯一
+                    timestamp: item.timestamp,
+                    category: item.category || '未知分类',
+                    applicant: item.applicant,
+                    originalData: item.originalData,
+                    tableHTML: item.tableHTML || '',
+                    compensationCardHTML: item.compensationCardHTML || '',
+                    dataCount: item.dataCount || 0,
+                    extractedData: item.extractedData || {}
+                };
+                
+                // 添加到历史记录
+                historyRecords.unshift(newRecord);
+            });
+            
+            // 更新显示
+            updateHistoryDisplay();
+            updateUserCardsDisplay();
+            updateSummaryDisplay();
+            updateMyAccountCards();
+            updateRecycleBadge();
+            populateFilterOptions();
+            saveToLocalStorage();
+            
+            showToast(`成功导入 ${pendingImportRecords.length} 条新记录，过滤掉 ${pendingImportRecords.length - pendingImportRecords.length} 条重复记录`, 'success');
+            closeImportPreview();
         }
         
         // 从JSON数据导入所有用户数据
