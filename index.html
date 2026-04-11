@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单报表系统（V4.12版）</title>
+    <title>订单报表系统（预览增强版）</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -18,7 +18,7 @@
             color: #333;
             min-height: 100vh;
             padding: 15px;
-            display: none; /* 初始隐藏内容 */
+            display: none;
         }
         
         .container {
@@ -345,7 +345,7 @@
             font-size: 0.9rem;
         }
         
-        /* 订单数据输入框容器 - 新增 */
+        /* 订单数据输入框容器 */
         .input-with-categories {
             display: flex;
             gap: 15px;
@@ -354,7 +354,7 @@
         
         /* 缩小订单数据输入框宽度 */
         #orderData {
-            width: 65%; /* 缩小宽度 */
+            width: 65%;
             height: 120px;
             padding: 12px;
             border: 1px solid #ddd;
@@ -362,8 +362,8 @@
             font-size: 0.9rem;
             resize: vertical;
             transition: border-color 0.3s;
-            color: #333; /* 正常文字颜色 */
-            font-style: normal; /* 正常字体样式 */
+            color: #333;
+            font-style: normal;
         }
         
         #orderData:focus {
@@ -372,13 +372,13 @@
             box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
         
-        /* 分类按钮组样式 - 移到右侧 */
+        /* 分类按钮组样式 */
         .category-button-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            width: 35%; /* 占据剩余宽度 */
-            min-width: 180px; /* 最小宽度 */
+            width: 35%;
+            min-width: 180px;
         }
         
         .category-btn {
@@ -640,23 +640,23 @@
             word-break: break-word;
             line-height: 1.4;
             font-size: 0.8rem;
-            font-weight: 500; /* 稍微加粗 */
+            font-weight: 500;
         }
         
         /* 赔付金额高亮样式 */
         .compensation-amount {
-            color: #e74c3c; /* 红色 */
+            color: #e74c3c;
             font-weight: bold;
         }
         
         /* 盈亏情况高亮样式 */
         .profit-positive {
-            color: #27ae60; /* 绿色 */
+            color: #27ae60;
             font-weight: bold;
         }
         
         .profit-negative {
-            color: #e74c3c; /* 红色 */
+            color: #e74c3c;
             font-weight: bold;
         }
         
@@ -679,7 +679,7 @@
             color: #c0392b;
         }
         
-        /* 用户卡片样式（大卡片内的独立卡片） */
+        /* 用户卡片样式 */
         .user-card {
             background: #f8f9fa;
             border-radius: 8px;
@@ -688,7 +688,7 @@
             margin-bottom: 12px;
             border: 1px solid #e1e8f0;
             transition: all 0.3s ease;
-            width: calc(33.333% - 10px); /* 三列布局 */
+            width: calc(33.333% - 10px);
             min-width: 0;
         }
         
@@ -791,7 +791,7 @@
             text-align: right;
         }
         
-        /* 动态表格样式 - 已移除申报人显示 */
+        /* 动态表格样式 - 取消最大宽度限制 */
         .dynamic-table-container {
             margin-top: 10px;
             width: 100%;
@@ -802,7 +802,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
-            table-layout: fixed;
+            table-layout: auto; /* 改为自动布局 */
             border: 1px solid #e1e8f0;
             border-radius: 6px;
             overflow: hidden;
@@ -813,8 +813,7 @@
             padding: 6px 4px;
             text-align: center;
             word-break: break-all;
-            /* 新增：限制序和下单列的最大宽度 */
-            max-width: 80px;
+            /* 取消最大宽度限制 */
         }
         
         .dynamic-table th {
@@ -1086,10 +1085,10 @@
             margin-top: 20px;
         }
         
-        /* 汇总卡片样式 - 三列布局 */
+        /* 汇总卡片样式 */
         .summary-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 三列布局 */
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
         }
         
@@ -1190,17 +1189,17 @@
             color: #e74c3c;
         }
         
-        /* 用户卡片容器布局 - 三列 */
+        /* 用户卡片容器布局 */
         #userCardsContainer {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
         }
         
-        /* 我的账户卡片容器 - 三列布局 */
+        /* 我的账户卡片容器 */
         .my-account-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 三列布局 */
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
         }
         
@@ -1391,13 +1390,13 @@
         
         /* 高亮显示的用户名和分类 */
         .highlight-applicant {
-            color: #ffeb3b !important; /* 亮黄色 */
+            color: #ffeb3b !important;
             font-weight: bold;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
         
         .highlight-category {
-            color: #00ff7f !important; /* 春绿色 */
+            color: #00ff7f !important;
             font-weight: bold;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
@@ -1472,7 +1471,7 @@
             display: none;
         }
         
-        /* 响应式设计 - 移动端优化 */
+        /* 响应式设计 */
         @media (max-width: 1400px) {
             .container {
                 flex-direction: column;
@@ -1485,31 +1484,30 @@
         
         @media (max-width: 1200px) {
             .summary-container {
-                grid-template-columns: repeat(2, 1fr); /* 中等屏幕两列 */
+                grid-template-columns: repeat(2, 1fr);
             }
             
             .my-account-container {
-                grid-template-columns: repeat(2, 1fr); /* 中等屏幕两列 */
+                grid-template-columns: repeat(2, 1fr);
             }
             
             .user-card {
-                width: calc(50% - 8px); /* 中等屏幕两列 */
+                width: calc(50% - 8px);
             }
         }
         
         @media (max-width: 992px) {
-            /* 平板设备：输入框和按钮组垂直排列 */
             .input-with-categories {
                 flex-direction: column;
             }
             
             #orderData {
-                width: 100%; /* 恢复全宽 */
+                width: 100%;
             }
             
             .category-button-group {
-                width: 100%; /* 恢复全宽 */
-                flex-direction: row; /* 按钮横向排列 */
+                width: 100%;
+                flex-direction: row;
                 flex-wrap: wrap;
             }
             
@@ -1552,73 +1550,20 @@
                 font-size: 1.5rem;
             }
             
-            .category-group {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            /* 移动端表格优化 */
-            .dynamic-table-container {
-                overflow-x: auto;
-            }
-            
-            .dynamic-table th, .dynamic-table td {
-                padding: 4px 2px;
-                font-size: 0.7rem;
-                /* 移动端保持最大宽度限制 */
-                max-width: 80px;
-            }
-            
-            .date-selector-container {
-                flex-direction: column;
-                gap: 6px;
-                padding: 8px;
-            }
-            
-            .date-input {
-                width: 100%;
-                text-align: center;
-            }
-            
-            .confirm-content {
-                max-width: 350px;
-            }
-            
-            .filter-group {
-                flex-direction: column;
-                gap: 6px;
-            }
-            
-            .filter-item {
-                flex-direction: row;
-                align-items: center;
-                gap: 4px;
-            }
-            
             .summary-container {
-                grid-template-columns: 1fr; /* 移动端单列 */
+                grid-template-columns: 1fr;
             }
             
             .my-account-container {
-                grid-template-columns: 1fr; /* 移动端单列 */
+                grid-template-columns: 1fr;
             }
             
-            .user-card {
-                width: 100%; /* 移动端单列 */
-            }
-            
-            /* 移动端用户卡片布局 */
             .user-card {
                 width: 100%;
             }
             
-            /* 移动端分类按钮 */
             .category-button-group {
                 flex-direction: column;
-            }
-            
-            .category-btn {
-                justify-content: center;
             }
             
             .history-controls {
@@ -1648,25 +1593,12 @@
         }
         
         @media (max-width: 480px) {
-            /* 超小屏幕优化 */
             .dynamic-table {
                 font-size: 0.65rem;
             }
             
             .dynamic-table th, .dynamic-table td {
                 padding: 3px 1px;
-                /* 超小屏幕保持最大宽度限制 */
-                max-width: 80px;
-            }
-            
-            .date-selector-container {
-                font-size: 0.8rem;
-                padding: 6px;
-            }
-            
-            .date-input {
-                font-size: 0.8rem;
-                padding: 4px 6px;
             }
             
             .confirm-content {
@@ -1897,7 +1829,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（导入确认版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（预览增强版）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -1914,11 +1846,10 @@
                 
                 <div class="input-group">
                     <label for="orderData">订单数据录入</label>
-                    <!-- 新增：输入框和分类按钮容器 -->
+                    <!-- 输入框和分类按钮容器 -->
                     <div class="input-with-categories">
-                        <!-- 移除placeholder提示 -->
                         <textarea id="orderData"></textarea>
-                        <!-- 分类按钮组移到这里 -->
+                        <!-- 分类按钮组 -->
                         <div class="category-button-group">
                             <button class="category-btn" data-category="澳门上家" onclick="selectCategory(this, '澳门上家')">
                                 <i class="fas fa-arrow-up"></i> 澳门上家
@@ -1988,7 +1919,7 @@
             </div>
         </div>
         
-        <!-- 右侧侧边栏 - 独立组件 -->
+        <!-- 右侧侧边栏 -->
         <div class="user-sidebar">
             <!-- 1. 筛选框组件 -->
             <div class="search-filter-section">
@@ -2031,7 +1962,6 @@
                     <i class="fas fa-user-circle"></i> 用户信息和中奖情况
                 </div>
                 <div class="big-card-content" id="userCardsContainer">
-                    <!-- 用户卡片将在这里动态生成 -->
                     <div class="empty-history">
                         <i class="fas fa-user-friends" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
                         <p>暂无用户数据</p>
@@ -2045,7 +1975,6 @@
                     <i class="fas fa-chart-bar"></i> 全部汇总
                 </div>
                 <div class="big-card-content" id="summaryContainer">
-                    <!-- 汇总卡片将在这里动态生成 -->
                     <div class="empty-history">
                         <i class="fas fa-chart-pie" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
                         <p>暂无汇总数据</p>
@@ -2060,7 +1989,6 @@
                 </div>
                 <div class="big-card-content">
                     <div class="my-account-container" id="myAccountContainer">
-                        <!-- 我的澳门和我的粤港卡片将在这里动态生成 -->
                         <div class="empty-history">
                             <i class="fas fa-coins" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i>
                             <p>暂无账户数据</p>
@@ -2595,7 +2523,7 @@
             const saveBtn = document.getElementById('saveBtn');
             
             try {
-                // 生成动态表格（已移除申报人显示）
+                // 生成动态表格（优先显示10行，数据量大时自动调整）
                 const tableHTML = createDynamicTableHTML(orderData, dataCount);
                 // 传递分类信息用于盈亏标签
                 const compensationCardHTML = createCompensationCardHTML(orderDataInput, category);
@@ -2670,27 +2598,39 @@
             updateMyAccountCards();
         }
         
-        // 创建动态表格HTML（已移除申报人显示）- 修改了下单数字加粗
+        // 创建动态表格HTML（优先显示10行，数据量大时自动调整行列数）
         function createDynamicTableHTML(orderData, dataCount) {
             // 检测是否为移动端
             const isMobile = window.innerWidth <= 768;
             const isSmallMobile = window.innerWidth <= 480;
             
-            // 根据设备类型和数量动态计算列数
+            // 优先显示10行，如果数据量大于10，则根据数据量自动计算列数
+            let maxRows = 10;
+            if (dataCount > 20) {
+                maxRows = 15;
+            }
+            if (dataCount > 50) {
+                maxRows = 20;
+            }
+            
+            // 根据数据量和设备类型动态计算列数
             let columns;
             if (isSmallMobile) {
                 // 超小屏幕：最多3列
                 if (dataCount <= 3) columns = 1;
                 else if (dataCount <= 6) columns = 2;
-                else columns = 3;
+                else if (dataCount <= 9) columns = 3;
+                else if (dataCount <= 12) columns = 4;
+                else columns = 4;
             } else if (isMobile) {
                 // 移动端：最多4列
                 if (dataCount <= 4) columns = 1;
                 else if (dataCount <= 8) columns = 2;
                 else if (dataCount <= 12) columns = 3;
+                else if (dataCount <= 16) columns = 4;
                 else columns = 4;
             } else {
-                // 桌面端：保持原有逻辑
+                // 桌面端：根据数据量调整
                 if (dataCount <= 5) {
                     columns = 1;
                 } else if (dataCount <= 12) {
@@ -2710,7 +2650,9 @@
                 }
             }
             
-            const rows = Math.ceil(dataCount / columns);
+            // 计算实际显示的行数（优先10行）
+            const displayRows = Math.min(maxRows, Math.ceil(dataCount / columns));
+            const displayCount = Math.min(dataCount, displayRows * columns);
             
             let tableHTML = `
                 <div class="dynamic-table-container">
@@ -2725,12 +2667,12 @@
             tableHTML += `</tr></thead><tbody>`;
             
             // 创建表格内容（按列优先排列，垂直序号）
-            for (let row = 0; row < rows; row++) {
+            for (let row = 0; row < displayRows; row++) {
                 tableHTML += '<tr>';
                 for (let col = 0; col < columns; col++) {
-                    const index = row + col * rows;
-                    if (index < dataCount) {
-                        // 修改：将下单数字加粗处理
+                    const index = row + col * displayRows;
+                    if (index < displayCount) {
+                        // 将下单数字加粗处理
                         tableHTML += `<td><span class="serial-number">${index + 1}</span></td><td><span class="order-amount">${orderData[index]}</span></td>`;
                     } else {
                         tableHTML += '<td></td><td></td>'; // 空单元格填充
@@ -2739,19 +2681,30 @@
                 tableHTML += '</tr>';
             }
             
+            // 如果数据量大于显示数量，添加提示
+            if (dataCount > displayCount) {
+                tableHTML += `
+                    <tr>
+                        <td colspan="${columns * 2}" style="text-align: center; color: #7f8c8d; font-style: italic; padding: 8px;">
+                            还有 ${dataCount - displayCount} 条记录未显示（共 ${dataCount} 条）
+                        </td>
+                    </tr>
+                `;
+            }
+            
             tableHTML += `
                         </tbody>
                     </table>
                 </div>
                 <div style="margin-top: 10px; font-size: 0.9rem; color: #7f8c8d; text-align: right;">
-                    共 ${dataCount} 条订单记录，按 ${columns} 列 × ${rows} 行显示
+                    显示 ${displayCount} 条记录，按 ${columns} 列 × ${displayRows} 行显示
                 </div>
             `;
             
             return tableHTML;
         }
         
-        // 创建赔付明细卡片HTML（高亮赔金和盈亏情况，添加盈亏标签）- 修改了文本加粗
+        // 创建赔付明细卡片HTML（高亮赔金和盈亏情况，添加盈亏标签）
         function createCompensationCardHTML(originalData, category) {
             if (!originalData) return '';
             
