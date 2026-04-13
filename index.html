@@ -2083,7 +2083,7 @@
     <div class="confirm-dialog" id="confirmDialog">
         <div class="confirm-content">
             <h3 id="confirmTitle">确认删除</h3>
-            <p id="confirmMessage">确定要删除这条订单报表吗？此操作将移至回收站。</p>
+            <p id="confirmMessage">此操作将移至回收站。</p>
             <div class="confirm-buttons">
                 <button class="confirm-btn confirm-yes" id="confirmYesBtn">确定</button>
                 <button class="confirm-btn confirm-no" onclick="hideClearConfirm()">取消</button>
@@ -2360,7 +2360,7 @@
         // 请求清空密码
         function requestClearPassword() {
             currentOperation = 'clear';
-            document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码：891105';
+            document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码';
             document.getElementById('passwordDialog').style.display = 'flex';
             document.getElementById('operationPassword').value = '';
             document.getElementById('passwordError').style.display = 'none';
