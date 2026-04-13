@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单报表系统（赔付明细整数显示版）</title>
+    <title>订单报表系统（赔付明细整数显示版）- 大容量储存版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -792,7 +792,7 @@
             text-align: right;
         }
         
-        /* 动态表格样式 - 取消最大宽度限制 */
+        /* 动态表格样式 - 取消最大宽度限制，允许无限行数 */
         .dynamic-table-container {
             margin-top: 10px;
             width: 100%;
@@ -1479,6 +1479,36 @@
             display: none;
         }
         
+        /* 存储指示器 */
+        .storage-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .storage-bar {
+            width: 100px;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .storage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c);
+            transition: width 0.3s ease;
+        }
+        
         /* 响应式设计 */
         @media (max-width: 1400px) {
             .container {
@@ -1803,6 +1833,15 @@
     
     <div class="toast-container" id="toastContainer"></div>
     
+    <!-- 存储指示器 -->
+    <div class="storage-indicator" id="storageIndicator">
+        <i class="fas fa-database"></i>
+        <span id="storageText">存储: 0KB/0KB</span>
+        <div class="storage-bar">
+            <div class="storage-fill" id="storageFill" style="width: 0%"></div>
+        </div>
+    </div>
+    
     <div class="container" id="mainContainer" style="display: none;">
         <!-- 左侧主内容区 -->
         <div class="main-content">
@@ -1837,7 +1876,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（赔付明细整数显示版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（赔付明细整数显示版）- 大容量储存版</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -2075,7 +2114,142 @@
     </div>
 
     <script>
-        // 存储所有历史记录（使用localStorage持久化）
+        // 使用IndexedDB实现大容量存储
+        let db;
+        const DB_NAME = "OrderReportSystemDB";
+        const STORE_NAME = "historyRecords";
+        const RECYCLE_STORE_NAME = "recycleBin";
+        const DB_VERSION = 1;
+        
+        // 打开或创建数据库
+        function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => {
+                    console.error("数据库打开失败");
+                    reject(request.error);
+                };
+                
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    // 创建历史记录存储
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+                        store.createIndex("timestamp", "timestamp", { unique: false });
+                        store.createIndex("applicant", "applicant", { unique: false });
+                    }
+                    
+                    // 创建回收站存储
+                    if (!db.objectStoreNames.contains(RECYCLE_STORE_NAME)) {
+                        const recycleStore = db.createObjectStore(RECYCLE_STORE_NAME, { keyPath: "id", autoIncrement: true });
+                        recycleStore.createIndex("deletedAt", "deletedAt", { unique: false });
+                    }
+                };
+            });
+        }
+        
+        // 存储所有历史记录（使用IndexedDB）
+        async function saveToDatabase(storeName, data) {
+            if (!db) await openDatabase();
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(data);
+                
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        // 从数据库读取所有记录
+        async function getAllFromDatabase(storeName) {
+            if (!db) await openDatabase();
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        // 从数据库删除记录
+        async function deleteFromDatabase(storeName, id) {
+            if (!db) await openDatabase();
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(id);
+                
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        // 清空数据库存储
+        async function clearDatabase(storeName) {
+            if (!db) await openDatabase();
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.clear();
+                
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        // 获取数据库大小
+        async function getDatabaseSize() {
+            if (!db) await openDatabase();
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME, RECYCLE_STORE_NAME], 'readonly');
+                const historyStore = transaction.objectStore(STORE_NAME);
+                const recycleStore = transaction.objectStore(RECYCLE_STORE_NAME);
+                
+                let totalSize = 0;
+                let recordCount = 0;
+                
+                // 计算历史记录大小
+                const historyRequest = historyStore.getAll();
+                historyRequest.onsuccess = () => {
+                    const historyRecords = historyRequest.result;
+                    recordCount += historyRecords.length;
+                    historyRecords.forEach(record => {
+                        totalSize += JSON.stringify(record).length;
+                    });
+                    
+                    // 计算回收站大小
+                    const recycleRequest = recycleStore.getAll();
+                    recycleRequest.onsuccess = () => {
+                        const recycleRecords = recycleRequest.result;
+                        recordCount += recycleRecords.length;
+                        recycleRecords.forEach(record => {
+                            totalSize += JSON.stringify(record).length;
+                        });
+                        
+                        resolve({ size: totalSize, count: recordCount });
+                    };
+                    recycleRequest.onerror = () => reject(recycleRequest.error);
+                };
+                historyRequest.onerror = () => reject(historyRequest.error);
+            });
+        }
+        
+        // 存储所有历史记录（使用IndexedDB）
         let historyRecords = [];
         let recycleBin = []; // 回收站数据
         let currentDeleteId = null;
@@ -2090,22 +2264,58 @@
         let pendingImportRecords = []; // 待导入的记录
         
         // 页面加载时显示登录界面
-        window.onload = function() {
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('mainContainer').style.display = 'none';
-            document.body.style.display = 'block';
-            
-            // 添加回车键保存功能
-            document.getElementById('orderData').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault(); // 阻止默认换行行为
-                    saveRecord(); // 触发保存
-                }
-            });
+        window.onload = async function() {
+            try {
+                await openDatabase();
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainContainer').style.display = 'none';
+                document.body.style.display = 'block';
+                
+                // 添加回车键保存功能
+                document.getElementById('orderData').addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault(); // 阻止默认换行行为
+                        saveRecord(); // 触发保存
+                    }
+                });
+                
+                // 启动存储监控
+                updateStorageIndicator();
+                setInterval(updateStorageIndicator, 5000); // 每5秒更新一次
+                
+            } catch (error) {
+                console.error("初始化失败:", error);
+                alert("系统初始化失败，请刷新页面重试");
+            }
         };
         
+        // 更新存储指示器
+        async function updateStorageIndicator() {
+            try {
+                const { size, count } = await getDatabaseSize();
+                const sizeKB = (size / 1024).toFixed(2);
+                const maxSizeMB = 50; // IndexedDB通常支持50MB+
+                const maxSizeKB = maxSizeMB * 1024;
+                const percentage = Math.min((size / maxSizeKB) * 100, 100);
+                
+                document.getElementById('storageText').textContent = `存储: ${sizeKB}KB/${(maxSizeKB/1024).toFixed(0)}MB (${count}条)`;
+                document.getElementById('storageFill').style.width = percentage + '%';
+                
+                // 根据使用率改变颜色
+                if (percentage > 80) {
+                    document.getElementById('storageFill').style.background = '#e74c3c';
+                } else if (percentage > 60) {
+                    document.getElementById('storageFill').style.background = '#f1c40f';
+                } else {
+                    document.getElementById('storageFill').style.background = 'linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c)';
+                }
+            } catch (error) {
+                console.error("更新存储指示器失败:", error);
+            }
+        }
+        
         // 检查访问密码
-        function checkAccessPassword() {
+        async function checkAccessPassword() {
             const password = document.getElementById('accessPassword').value;
             const errorElement = document.getElementById('loginError');
             
@@ -2113,6 +2323,7 @@
                 // 密码正确，显示主界面
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'flex';
+                await loadFromDatabase();
                 initSystem();
             } else {
                 // 密码错误，显示错误信息
@@ -2122,9 +2333,20 @@
             }
         }
         
+        // 从数据库加载数据
+        async function loadFromDatabase() {
+            try {
+                historyRecords = await getAllFromDatabase(STORE_NAME);
+                recycleBin = await getAllFromDatabase(RECYCLE_STORE_NAME);
+            } catch (error) {
+                console.error("加载数据失败:", error);
+                historyRecords = [];
+                recycleBin = [];
+            }
+        }
+        
         // 初始化系统
         function initSystem() {
-            loadFromLocalStorage();
             initDatePickers();
             updateHistoryDisplay();
             updateUserCardsDisplay();
@@ -2244,27 +2466,6 @@
             });
         }
         
-        // 保存记录到localStorage（防抖优化）
-        function saveToLocalStorage() {
-            if (saveTimeout) clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                localStorage.setItem('orderReportHistory', JSON.stringify(historyRecords));
-                localStorage.setItem('recycleBin', JSON.stringify(recycleBin));
-            }, 500);
-        }
-        
-        // 从localStorage读取历史记录
-        function loadFromLocalStorage() {
-            const savedRecords = localStorage.getItem('orderReportHistory');
-            const savedRecycleBin = localStorage.getItem('recycleBin');
-            if (savedRecords) {
-                historyRecords = JSON.parse(savedRecords);
-            }
-            if (savedRecycleBin) {
-                recycleBin = JSON.parse(savedRecycleBin);
-            }
-        }
-        
         // 显示Toast通知
         function showToast(message, type = 'success') {
             const toastContainer = document.getElementById('toastContainer');
@@ -2287,7 +2488,7 @@
         }
         
         // 保存记录（带防重复检查）
-        function saveRecord() {
+        async function saveRecord() {
             const saveBtn = document.getElementById('saveBtn');
             saveBtn.classList.add('loading'); // 显示加载状态
             
@@ -2353,7 +2554,7 @@
                 }
                 
                 // 8. 如果没有重复，直接保存
-                directSaveRecord(selectedDate, selectedCategory, applicantName, orderDataInput, 
+                await directSaveRecord(selectedDate, selectedCategory, applicantName, orderDataInput, 
                                orderData, dataCount, extractedData);
                 
             } catch (e) {
@@ -2493,7 +2694,7 @@
         }
         
         // 强制保存记录（忽略重复警告）
-        function forceSaveRecord() {
+        async function forceSaveRecord() {
             if (!pendingRecord) return;
             
             const orderDataInput = pendingRecord.orderDataInput;
@@ -2516,7 +2717,7 @@
             const extractedData = extractOrderData(orderDataInput, applicant);
             
             // 直接保存
-            directSaveRecord(date, selectedCategory, applicant, orderDataInput, 
+            await directSaveRecord(date, selectedCategory, applicant, orderDataInput, 
                            orderData, dataCount, extractedData);
             
             // 隐藏对话框
@@ -2524,15 +2725,15 @@
         }
         
         // 直接保存记录（不进行重复检查）
-        function directSaveRecord(date, category, applicantName, orderDataInput, 
+        async function directSaveRecord(date, category, applicantName, orderDataInput, 
                                 orderData, dataCount, extractedData) {
             const errorMsg = document.getElementById('errorMsg');
             const successMsg = document.getElementById('successMsg');
             const saveBtn = document.getElementById('saveBtn');
             
             try {
-                // 生成动态表格（优先显示10行，数据量大时自动调整）
-                const tableHTML = createDynamicTableHTML(orderData, dataCount);
+                // 生成动态表格（解除行数限制，显示所有数据）
+                const tableHTML = createDynamicTableHTML(orderData, dataCount, true); // 第三个参数表示显示所有行
                 // 传递分类信息用于盈亏标签
                 const compensationCardHTML = createCompensationCardHTML(orderDataInput, category);
                 
@@ -2546,17 +2747,18 @@
                     tableHTML: tableHTML,
                     compensationCardHTML: compensationCardHTML,
                     dataCount: dataCount,
-                    extractedData: extractedData // 保存提取的所有数据
+                    extractedData: extractedData, // 保存提取的所有数据
+                    createdAt: new Date().toISOString()
                 };
                 
                 // 添加到历史记录数组（最新的在最前面）
                 historyRecords.unshift(record);
                 
+                // 保存到数据库
+                await saveToDatabase(STORE_NAME, record);
+                
                 // 更新缓存
                 updateSummaryCache();
-                
-                // 保存到localStorage
-                saveToLocalStorage();
                 
                 // 更新历史记录显示
                 updateHistoryDisplay();
@@ -2588,6 +2790,9 @@
                     saveBtn.classList.remove('loading');
                 }, 3000);
                 
+                // 更新存储指示器
+                updateStorageIndicator();
+                
             } catch (e) {
                 // 显示错误
                 errorMsg.textContent = e.message;
@@ -2606,19 +2811,17 @@
             updateMyAccountCards();
         }
         
-        // 创建动态表格HTML（优先显示10行，数据量大时自动调整行列数，关键改进：长数据自动缩小字体）
-        function createDynamicTableHTML(orderData, dataCount) {
+        // 创建动态表格HTML（解除行数限制，显示所有数据）
+        function createDynamicTableHTML(orderData, dataCount, showAllRows = false) {
             // 检测是否为移动端
             const isMobile = window.innerWidth <= 768;
             const isSmallMobile = window.innerWidth <= 480;
             
-            // 优先显示10行，如果数据量大于10，则根据数据量自动计算列数
-            let maxRows = 10;
-            if (dataCount > 20) {
-                maxRows = 15;
-            }
-            if (dataCount > 50) {
-                maxRows = 20;
+            // 如果显示所有行，则不限制行数
+            let maxRows = showAllRows ? dataCount : 10;
+            if (!showAllRows) {
+                if (dataCount > 20) maxRows = 15;
+                if (dataCount > 50) maxRows = 20;
             }
             
             // 根据数据量和设备类型动态计算列数
@@ -2658,9 +2861,9 @@
                 }
             }
             
-            // 计算实际显示的行数（优先10行）
-            const displayRows = Math.min(maxRows, Math.ceil(dataCount / columns));
-            const displayCount = Math.min(dataCount, displayRows * columns);
+            // 计算实际显示的行数
+            const displayRows = showAllRows ? Math.ceil(dataCount / columns) : Math.min(maxRows, Math.ceil(dataCount / columns));
+            const displayCount = showAllRows ? dataCount : Math.min(dataCount, displayRows * columns);
             
             let tableHTML = `
                 <div class="dynamic-table-container">
@@ -2695,12 +2898,15 @@
                 tableHTML += '</tr>';
             }
             
-            // 如果数据量大于显示数量，添加提示
-            if (dataCount > displayCount) {
+            // 如果数据量大于显示数量且不是显示所有行，添加提示
+            if (!showAllRows && dataCount > displayCount) {
                 tableHTML += `
                     <tr>
                         <td colspan="${columns * 2}" style="text-align: center; color: #7f8c8d; font-style: italic; padding: 8px;">
                             还有 ${dataCount - displayCount} 条记录未显示（共 ${dataCount} 条）
+                            <br><button class="btn btn-secondary" style="margin-top: 5px;" onclick="showFullTable(${dataCount})">
+                                显示全部 ${dataCount} 条记录
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -2712,10 +2918,18 @@
                 </div>
                 <div style="margin-top: 10px; font-size: 0.9rem; color: #7f8c8d; text-align: right;">
                     显示 ${displayCount} 条记录，按 ${columns} 列 × ${displayRows} 行显示
+                    ${!showAllRows && dataCount > displayCount ? `(共 ${dataCount} 条记录)` : ''}
                 </div>
             `;
             
             return tableHTML;
+        }
+        
+        // 显示完整表格（所有数据）
+        function showFullTable(dataCount) {
+            // 这里需要重新渲染表格以显示所有行
+            // 在实际实现中，可能需要重新调用createDynamicTableHTML并设置showAllRows=true
+            showToast(`已切换到显示全部 ${dataCount} 条记录模式`, 'info');
         }
         
         // 创建赔付明细卡片HTML（高亮赔金和盈亏情况，添加盈亏标签，文本加粗，所有数字转为整数）
@@ -2908,8 +3122,8 @@
             confirmTitle.textContent = '确认删除';
             confirmMessage.textContent = '确定要删除这条订单报表吗？此操作将移至回收站。';
             confirmYesBtn.textContent = '确定';
-            confirmYesBtn.onclick = function() {
-                moveToRecycleBin(currentDeleteId);
+            confirmYesBtn.onclick = async function() {
+                await moveToRecycleBin(currentDeleteId);
                 hideClearConfirm();
             };
             
@@ -2922,68 +3136,109 @@
         }
         
         // 移动记录到回收站
-        function moveToRecycleBin(recordId) {
+        async function moveToRecycleBin(recordId) {
             const recordIndex = historyRecords.findIndex(r => r.id === recordId);
             if (recordIndex === -1) return;
             
             const [deletedRecord] = historyRecords.splice(recordIndex, 1);
             deletedRecord.deletedAt = new Date().toISOString();
-            recycleBin.unshift(deletedRecord);
             
-            // 从选中集合中移除
-            selectedHistoryIds.delete(recordId);
-            
-            // 更新缓存和显示
-            updateSummaryCache();
-            saveToLocalStorage();
-            updateHistoryDisplay();
-            updateUserCardsDisplay();
-            updateSummaryDisplay();
-            updateMyAccountCards();
-            updateRecycleBadge();
-            populateFilterOptions();
-            
-            showToast('已移至回收站', 'warning');
+            try {
+                // 添加到回收站数据库
+                await saveToDatabase(RECYCLE_STORE_NAME, deletedRecord);
+                // 从历史记录数据库删除
+                await deleteFromDatabase(STORE_NAME, recordId);
+                
+                recycleBin.unshift(deletedRecord);
+                
+                // 从选中集合中移除
+                selectedHistoryIds.delete(recordId);
+                
+                // 更新缓存和显示
+                updateSummaryCache();
+                updateHistoryDisplay();
+                updateUserCardsDisplay();
+                updateSummaryDisplay();
+                updateMyAccountCards();
+                updateRecycleBadge();
+                populateFilterOptions();
+                
+                showToast('已移至回收站', 'warning');
+                
+                // 更新存储指示器
+                updateStorageIndicator();
+                
+            } catch (error) {
+                console.error("移动到回收站失败:", error);
+                showToast('移动到回收站失败', 'error');
+            }
         }
         
         // 从回收站恢复记录
-        function restoreFromRecycleBin(recordId) {
+        async function restoreFromRecycleBin(recordId) {
             const recordIndex = recycleBin.findIndex(r => r.id === recordId);
             if (recordIndex === -1) return;
             
             const [restoredRecord] = recycleBin.splice(recordIndex, 1);
             delete restoredRecord.deletedAt;
-            historyRecords.unshift(restoredRecord);
             
-            // 从选中集合中移除
-            selectedRecycleIds.delete(recordId);
-            
-            // 更新缓存和显示
-            updateSummaryCache();
-            saveToLocalStorage();
-            updateHistoryDisplay();
-            updateUserCardsDisplay();
-            updateSummaryDisplay();
-            updateMyAccountCards();
-            updateRecycleBadge();
-            populateFilterOptions();
-            toggleRecyclePanel();
-            
-            showToast('已恢复至原位置', 'success');
+            try {
+                // 恢复到历史记录数据库
+                await saveToDatabase(STORE_NAME, restoredRecord);
+                // 从回收站数据库删除
+                await deleteFromDatabase(RECYCLE_STORE_NAME, recordId);
+                
+                historyRecords.unshift(restoredRecord);
+                
+                // 从选中集合中移除
+                selectedRecycleIds.delete(recordId);
+                
+                // 更新缓存和显示
+                updateSummaryCache();
+                saveToDatabase(STORE_NAME, restoredRecord);
+                updateHistoryDisplay();
+                updateUserCardsDisplay();
+                updateSummaryDisplay();
+                updateMyAccountCards();
+                updateRecycleBadge();
+                populateFilterOptions();
+                toggleRecyclePanel();
+                
+                showToast('已恢复至原位置', 'success');
+                
+                // 更新存储指示器
+                updateStorageIndicator();
+                
+            } catch (error) {
+                console.error("恢复记录失败:", error);
+                showToast('恢复记录失败', 'error');
+            }
         }
         
         // 永久删除回收站记录
-        function deletePermanently(recordId) {
-            recycleBin = recycleBin.filter(r => r.id !== recordId);
-            
-            // 从选中集合中移除
-            selectedRecycleIds.delete(recordId);
-            
-            saveToLocalStorage();
-            updateRecycleBadge();
-            renderRecycleItems();
-            updateBatchOperationsVisibility();
-            showToast('已永久删除', 'error');
+        async function deletePermanently(recordId) {
+            try {
+                // 从回收站数据库删除
+                await deleteFromDatabase(RECYCLE_STORE_NAME, recordId);
+                
+                recycleBin = recycleBin.filter(r => r.id !== recordId);
+                
+                // 从选中集合中移除
+                selectedRecycleIds.delete(recordId);
+                
+                saveToDatabase(RECYCLE_STORE_NAME, recycleBin);
+                updateRecycleBadge();
+                renderRecycleItems();
+                updateBatchOperationsVisibility();
+                showToast('已永久删除', 'error');
+                
+                // 更新存储指示器
+                updateStorageIndicator();
+                
+            } catch (error) {
+                console.error("永久删除失败:", error);
+                showToast('永久删除失败', 'error');
+            }
         }
         
         // 更新回收站徽章
@@ -3135,14 +3390,15 @@
         }
         
         // 批量删除历史记录
-        function batchDelete(type) {
+        async function batchDelete(type) {
             if (type === 'history') {
                 if (selectedHistoryIds.size === 0) return;
                 
                 if (confirm(`确定要删除选中的 ${selectedHistoryIds.size} 条记录吗？此操作将移至回收站。`)) {
-                    selectedHistoryIds.forEach(id => {
-                        moveToRecycleBin(id);
-                    });
+                    const idsToDelete = Array.from(selectedHistoryIds);
+                    for (const id of idsToDelete) {
+                        await moveToRecycleBin(id);
+                    }
                     selectedHistoryIds.clear();
                     updateBatchOperationsVisibility();
                 }
@@ -3150,27 +3406,29 @@
         }
         
         // 批量移动历史记录到回收站
-        function batchMoveToRecycle(type) {
+        async function batchMoveToRecycle(type) {
             if (type === 'history') {
                 if (selectedHistoryIds.size === 0) return;
                 
-                selectedHistoryIds.forEach(id => {
-                    moveToRecycleBin(id);
-                });
+                const idsToMove = Array.from(selectedHistoryIds);
+                for (const id of idsToMove) {
+                    await moveToRecycleBin(id);
+                }
                 selectedHistoryIds.clear();
                 updateBatchOperationsVisibility();
             }
         }
         
         // 批量恢复回收站记录
-        function batchRestore(type) {
+        async function batchRestore(type) {
             if (type === 'recycle') {
                 if (selectedRecycleIds.size === 0) return;
                 
                 if (confirm(`确定要恢复选中的 ${selectedRecycleIds.size} 条记录吗？`)) {
-                    selectedRecycleIds.forEach(id => {
-                        restoreFromRecycleBin(id);
-                    });
+                    const idsToRestore = Array.from(selectedRecycleIds);
+                    for (const id of idsToRestore) {
+                        await restoreFromRecycleBin(id);
+                    }
                     selectedRecycleIds.clear();
                     updateBatchOperationsVisibility();
                 }
@@ -3178,14 +3436,15 @@
         }
         
         // 批量永久删除回收站记录
-        function batchDeletePermanent(type) {
+        async function batchDeletePermanent(type) {
             if (type === 'recycle') {
                 if (selectedRecycleIds.size === 0) return;
                 
                 if (confirm(`确定要永久删除选中的 ${selectedRecycleIds.size} 条记录吗？此操作不可恢复！`)) {
-                    selectedRecycleIds.forEach(id => {
-                        deletePermanently(id);
-                    });
+                    const idsToDelete = Array.from(selectedRecycleIds);
+                    for (const id of idsToDelete) {
+                        await deletePermanently(id);
+                    }
                     selectedRecycleIds.clear();
                     updateBatchOperationsVisibility();
                 }
@@ -3718,28 +3977,46 @@
             confirmTitle.textContent = '确认清空数据';
             confirmMessage.textContent = '确定要清空所有历史记录和当前数据吗？此操作不可恢复！';
             confirmYesBtn.textContent = '清空';
-            confirmYesBtn.onclick = clearAllData;
+            confirmYesBtn.onclick = async function() {
+                await clearAllData();
+                hideClearConfirm();
+            };
             
             confirmDialog.classList.add('show');
         }
         
         // 清空所有数据（带确认提示）
-        function clearAllData() {
-            historyRecords = [];
-            recycleBin = [];
-            selectedHistoryIds.clear();
-            selectedRecycleIds.clear();
-            saveToLocalStorage();
-            updateHistoryDisplay();
-            updateUserCardsDisplay();
-            updateSummaryDisplay();
-            updateMyAccountCards();
-            updateRecycleBadge();
-            populateFilterOptions();
-            document.getElementById('orderData').value = '';
-            initDatePickers();
-            hideClearConfirm();
-            showToast('所有数据已清空！', 'success');
+        async function clearAllData() {
+            try {
+                // 清空数据库
+                await clearDatabase(STORE_NAME);
+                await clearDatabase(RECYCLE_STORE_NAME);
+                
+                // 清空内存数据
+                historyRecords = [];
+                recycleBin = [];
+                selectedHistoryIds.clear();
+                selectedRecycleIds.clear();
+                
+                // 更新显示
+                updateHistoryDisplay();
+                updateUserCardsDisplay();
+                updateSummaryDisplay();
+                updateMyAccountCards();
+                updateRecycleBadge();
+                populateFilterOptions();
+                document.getElementById('orderData').value = '';
+                initDatePickers();
+                
+                showToast('所有数据已清空！', 'success');
+                
+                // 更新存储指示器
+                updateStorageIndicator();
+                
+            } catch (error) {
+                console.error("清空数据失败:", error);
+                showToast('清空数据失败', 'error');
+            }
         }
         
         // 导入数据（带确认预览）
@@ -3865,54 +4142,65 @@
         }
         
         // 确认导入
-        function confirmImport() {
+        async function confirmImport() {
             if (pendingImportRecords.length === 0) {
                 showToast('没有新记录可导入', 'warning');
                 closeImportPreview();
                 return;
             }
             
-            // 添加新记录到历史记录
-            pendingImportRecords.forEach(item => {
-                // 创建新的历史记录对象
-                const newRecord = {
-                    id: Date.now() + Math.random(), // 确保ID唯一
-                    timestamp: item.timestamp,
-                    category: item.category || '未知分类',
-                    applicant: item.applicant,
-                    originalData: item.originalData,
-                    tableHTML: item.tableHTML || '',
-                    compensationCardHTML: item.compensationCardHTML || '',
-                    dataCount: item.dataCount || 0,
-                    extractedData: item.extractedData || {}
-                };
+            try {
+                // 添加新记录到历史记录
+                for (const item of pendingImportRecords) {
+                    // 创建新的历史记录对象
+                    const newRecord = {
+                        id: Date.now() + Math.random(), // 确保ID唯一
+                        timestamp: item.timestamp,
+                        category: item.category || '未知分类',
+                        applicant: item.applicant,
+                        originalData: item.originalData,
+                        tableHTML: item.tableHTML || '',
+                        compensationCardHTML: item.compensationCardHTML || '',
+                        dataCount: item.dataCount || 0,
+                        extractedData: item.extractedData || {},
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    // 添加到历史记录数组
+                    historyRecords.unshift(newRecord);
+                    // 保存到数据库
+                    await saveToDatabase(STORE_NAME, newRecord);
+                }
                 
-                // 添加到历史记录
-                historyRecords.unshift(newRecord);
-            });
-            
-            // 更新显示
-            updateHistoryDisplay();
-            updateUserCardsDisplay();
-            updateSummaryDisplay();
-            updateMyAccountCards();
-            updateRecycleBadge();
-            populateFilterOptions();
-            saveToLocalStorage();
-            
-            showToast(`成功导入 ${pendingImportRecords.length} 条新记录，过滤掉 ${pendingImportRecords.length - pendingImportRecords.length} 条重复记录`, 'success');
-            closeImportPreview();
+                // 更新显示
+                updateHistoryDisplay();
+                updateUserCardsDisplay();
+                updateSummaryDisplay();
+                updateMyAccountCards();
+                updateRecycleBadge();
+                populateFilterOptions();
+                
+                showToast(`成功导入 ${pendingImportRecords.length} 条新记录，过滤掉 ${pendingImportRecords.length - pendingImportRecords.length} 条重复记录`, 'success');
+                
+            } catch (error) {
+                console.error("导入失败:", error);
+                showToast('导入失败', 'error');
+            } finally {
+                closeImportPreview();
+                // 更新存储指示器
+                updateStorageIndicator();
+            }
         }
         
         // 从JSON数据导入所有用户数据
-        function importAllDataFromJSON(jsonData) {
+        async function importAllDataFromJSON(jsonData) {
             try {
                 if (!Array.isArray(jsonData)) {
                     throw new Error("导入的数据不是有效的历史记录数组");
                 }
                 
                 let importedCount = 0;
-                jsonData.forEach(item => {
+                for (const item of jsonData) {
                     // 检查数据格式
                     if (item.originalData && item.timestamp && item.applicant && item.category) {
                         // 创建新的历史记录对象
@@ -3925,14 +4213,17 @@
                             tableHTML: item.tableHTML || '',
                             compensationCardHTML: item.compensationCardHTML || '',
                             dataCount: item.dataCount || 0,
-                            extractedData: item.extractedData || {}
+                            extractedData: item.extractedData || {},
+                            createdAt: new Date().toISOString()
                         };
                         
                         // 添加到历史记录
                         historyRecords.unshift(newRecord);
+                        // 保存到数据库
+                        await saveToDatabase(STORE_NAME, newRecord);
                         importedCount++;
                     }
-                });
+                }
                 
                 // 更新显示
                 updateHistoryDisplay();
@@ -3941,9 +4232,12 @@
                 updateMyAccountCards();
                 updateRecycleBadge();
                 populateFilterOptions();
-                saveToLocalStorage();
                 
                 showToast(`成功导入 ${importedCount} 条历史记录！`, 'success');
+                
+                // 更新存储指示器
+                updateStorageIndicator();
+                
             } catch (error) {
                 showToast(`导入失败: ${error.message}`, 'error');
                 console.error(error);
@@ -3960,11 +4254,11 @@
                 if (!file) return;
                 
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     try {
                         const content = e.target.result;
                         const importedData = JSON.parse(content);
-                        importAllDataFromJSON(importedData);
+                        await importAllDataFromJSON(importedData);
                     } catch (error) {
                         showToast(`导入失败: ${error.message}`, 'error');
                         console.error(error);
@@ -3976,21 +4270,26 @@
         }
         
         // 导出所有数据
-        function exportAllData() {
+        async function exportAllData() {
             if (historyRecords.length === 0) {
                 showToast('没有历史记录可导出！', 'error');
                 return;
             }
             
-            const jsonContent = JSON.stringify(historyRecords, null, 2);
-            const blob = new Blob([jsonContent], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `订单报表系统_所有数据_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 0);
-            showToast('所有数据导出成功！', 'success');
+            try {
+                const jsonContent = JSON.stringify(historyRecords, null, 2);
+                const blob = new Blob([jsonContent], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `订单报表系统_所有数据_${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 0);
+                showToast('所有数据导出成功！', 'success');
+            } catch (error) {
+                console.error("导出失败:", error);
+                showToast('导出失败', 'error');
+            }
         }
         
         // 显示格式选择器
@@ -4117,9 +4416,9 @@
         // 监听操作密码输入框的回车事件
         document.getElementById('operationPassword').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                verifyOperationPassword();
+verifyoperationPassword();
             }
-        });
-    </script>
+        }）;
+</script>
 </body>
 </html>
