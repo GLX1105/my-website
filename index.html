@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单报表系统（V4.12版）</title>
+    <title>订单报表系统（v4.13版）</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -838,6 +838,13 @@
         .order-amount {
             font-weight: 600;
             color: #2c3e50;
+        }
+        
+        /* 关键改进：小字体样式 - 当数据过长时自动应用 */
+        .small-font {
+            font-size: 0.75em;
+            line-height: 1.2;
+            word-break: break-all;
         }
         
         .empty-history {
@@ -1715,7 +1722,7 @@
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h2><i class="fas fa-lock"></i> 系统访问受限</h2>
-            <p>请输入访问密码以继续使用订单报表系统</p>
+            <p>请输入访问密码</p>
             <input type="password" id="accessPassword" class="login-input" placeholder="输入访问密码">
             <div class="login-error" id="loginError">密码错误，请重试！</div>
             <button class="login-btn" onclick="checkAccessPassword()">进入系统</button>
@@ -1830,7 +1837,7 @@
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
-                <p>录入订单数据，系统自动识别所有中奖类型（V4.12版）</p>
+                <p>录入订单数据，系统自动识别所有中奖类型（大容量存储版）</p>
             </header>
             
             <!-- 数据录入区 -->
@@ -2068,7 +2075,104 @@
     </div>
 
     <script>
-        // 存储所有历史记录（使用localStorage持久化）
+        // IndexedDB数据库管理类
+        class DatabaseManager {
+            constructor(dbName = 'OrderReportDB', version = 1) {
+                this.dbName = dbName;
+                this.version = version;
+                this.db = null;
+            }
+
+            async openDatabase() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.version);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        
+                        // 创建历史记录存储
+                        if (!db.objectStoreNames.contains('historyRecords')) {
+                            const historyStore = db.createObjectStore('historyRecords', { keyPath: 'id', autoIncrement: true });
+                            historyStore.createIndex('timestamp', 'timestamp', { unique: false });
+                            historyStore.createIndex('applicant', 'applicant', { unique: false });
+                            historyStore.createIndex('category', 'category', { unique: false });
+                        }
+                        
+                        // 创建回收站存储
+                        if (!db.objectStoreNames.contains('recycleBin')) {
+                            const recycleStore = db.createObjectStore('recycleBin', { keyPath: 'id', autoIncrement: true });
+                            recycleStore.createIndex('deletedAt', 'deletedAt', { unique: false });
+                        }
+                    };
+                });
+            }
+
+            async addRecord(storeName, record) {
+                const db = await this.ensureDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(storeName, 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.add(record);
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async getAllRecords(storeName) {
+                const db = await this.ensureDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(storeName, 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async deleteRecord(storeName, id) {
+                const db = await this.ensureDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(storeName, 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.delete(id);
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async clearStore(storeName) {
+                const db = await this.ensureDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(storeName, 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.clear();
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async ensureDB() {
+                if (!this.db) {
+                    await this.openDatabase();
+                }
+                return this.db;
+            }
+        }
+
+        // 初始化数据库管理器
+        const dbManager = new DatabaseManager();
+
+        // 存储所有历史记录（使用IndexedDB）
         let historyRecords = [];
         let recycleBin = []; // 回收站数据
         let currentDeleteId = null;
@@ -2083,10 +2187,22 @@
         let pendingImportRecords = []; // 待导入的记录
         
         // 页面加载时显示登录界面
-        window.onload = function() {
+        window.onload = async function() {
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainContainer').style.display = 'none';
             document.body.style.display = 'block';
+            
+            // 初始化数据库
+            try {
+                await dbManager.openDatabase();
+                console.log('数据库初始化成功');
+            } catch (error) {
+                console.error('数据库初始化失败:', error);
+                showToast('数据库初始化失败，部分功能可能不可用', 'error');
+            }
+            
+            // 加载数据
+            await loadFromDatabase();
             
             // 添加回车键保存功能
             document.getElementById('orderData').addEventListener('keydown', function(e) {
@@ -2096,6 +2212,46 @@
                 }
             });
         };
+        
+        // 从数据库加载数据
+        async function loadFromDatabase() {
+            try {
+                historyRecords = await dbManager.getAllRecords('historyRecords') || [];
+                recycleBin = await dbManager.getAllRecords('recycleBin') || [];
+                console.log(`从数据库加载了 ${historyRecords.length} 条历史记录和 ${recycleBin.length} 条回收站记录`);
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                historyRecords = [];
+                recycleBin = [];
+            }
+        }
+        
+        // 保存数据到数据库
+        async function saveToDatabase() {
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(async () => {
+                try {
+                    // 清空现有数据
+                    await dbManager.clearStore('historyRecords');
+                    await dbManager.clearStore('recycleBin');
+                    
+                    // 保存历史记录
+                    for (const record of historyRecords) {
+                        await dbManager.addRecord('historyRecords', record);
+                    }
+                    
+                    // 保存回收站记录
+                    for (const record of recycleBin) {
+                        await dbManager.addRecord('recycleBin', record);
+                    }
+                    
+                    console.log('数据已保存到数据库');
+                } catch (error) {
+                    console.error('保存数据失败:', error);
+                    showToast('保存数据失败', 'error');
+                }
+            }, 500);
+        }
         
         // 检查访问密码
         function checkAccessPassword() {
@@ -2116,8 +2272,8 @@
         }
         
         // 初始化系统
-        function initSystem() {
-            loadFromLocalStorage();
+        async function initSystem() {
+            await loadFromDatabase();
             initDatePickers();
             updateHistoryDisplay();
             updateUserCardsDisplay();
@@ -2235,27 +2391,6 @@
                 option.textContent = user;
                 userFilter.appendChild(option);
             });
-        }
-        
-        // 保存记录到localStorage（防抖优化）
-        function saveToLocalStorage() {
-            if (saveTimeout) clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                localStorage.setItem('orderReportHistory', JSON.stringify(historyRecords));
-                localStorage.setItem('recycleBin', JSON.stringify(recycleBin));
-            }, 500);
-        }
-        
-        // 从localStorage读取历史记录
-        function loadFromLocalStorage() {
-            const savedRecords = localStorage.getItem('orderReportHistory');
-            const savedRecycleBin = localStorage.getItem('recycleBin');
-            if (savedRecords) {
-                historyRecords = JSON.parse(savedRecords);
-            }
-            if (savedRecycleBin) {
-                recycleBin = JSON.parse(savedRecycleBin);
-            }
         }
         
         // 显示Toast通知
@@ -2517,8 +2652,8 @@
         }
         
         // 直接保存记录（不进行重复检查）
-        function directSaveRecord(date, category, applicantName, orderDataInput, 
-                                orderData, dataCount, extractedData) {
+        async function directSaveRecord(date, category, applicantName, orderDataInput, 
+                                     orderData, dataCount, extractedData) {
             const errorMsg = document.getElementById('errorMsg');
             const successMsg = document.getElementById('successMsg');
             const saveBtn = document.getElementById('saveBtn');
@@ -2548,8 +2683,8 @@
                 // 更新缓存
                 updateSummaryCache();
                 
-                // 保存到localStorage
-                saveToLocalStorage();
+                // 保存到数据库
+                await saveToDatabase();
                 
                 // 更新历史记录显示
                 updateHistoryDisplay();
@@ -2599,7 +2734,7 @@
             updateMyAccountCards();
         }
         
-        // 创建动态表格HTML（优先显示10行，数据量大时自动调整行列数）
+        // 创建动态表格HTML（优先显示10行，数据量大时自动调整行列数，关键改进：长数据自动缩小字体）
         function createDynamicTableHTML(orderData, dataCount) {
             // 检测是否为移动端
             const isMobile = window.innerWidth <= 768;
@@ -2667,14 +2802,20 @@
             }
             tableHTML += `</tr></thead><tbody>`;
             
-            // 创建表格内容（按列优先排列，垂直序号）
+            // 创建表格内容（按列优先排列，垂直序号，关键改进：长数据自动应用小字体）
             for (let row = 0; row < displayRows; row++) {
                 tableHTML += '<tr>';
                 for (let col = 0; col < columns; col++) {
                     const index = row + col * displayRows;
                     if (index < displayCount) {
-                        // 将下单数字加粗处理
-                        tableHTML += `<td><span class="serial-number">${index + 1}</span></td><td><span class="order-amount">${orderData[index]}</span></td>`;
+                        const amount = orderData[index];
+                        const amountStr = amount.toString();
+                        // 关键改进：当数据长度超过6位时应用小字体
+                        const isLongData = amountStr.length > 6;
+                        const cellClass = isLongData ? ' class="small-font"' : '';
+                        
+                        tableHTML += `<td><span class="serial-number">${index + 1}</span></td>
+                                      <td${cellClass}><span class="order-amount">${amount}</span></td>`;
                     } else {
                         tableHTML += '<td></td><td></td>'; // 空单元格填充
                     }
@@ -2895,8 +3036,8 @@
             confirmTitle.textContent = '确认删除';
             confirmMessage.textContent = '确定要删除这条订单报表吗？此操作将移至回收站。';
             confirmYesBtn.textContent = '确定';
-            confirmYesBtn.onclick = function() {
-                moveToRecycleBin(currentDeleteId);
+            confirmYesBtn.onclick = async function() {
+                await moveToRecycleBin(currentDeleteId);
                 hideClearConfirm();
             };
             
@@ -2909,7 +3050,7 @@
         }
         
         // 移动记录到回收站
-        function moveToRecycleBin(recordId) {
+        async function moveToRecycleBin(recordId) {
             const recordIndex = historyRecords.findIndex(r => r.id === recordId);
             if (recordIndex === -1) return;
             
@@ -2922,7 +3063,7 @@
             
             // 更新缓存和显示
             updateSummaryCache();
-            saveToLocalStorage();
+            await saveToDatabase();
             updateHistoryDisplay();
             updateUserCardsDisplay();
             updateSummaryDisplay();
@@ -2934,7 +3075,7 @@
         }
         
         // 从回收站恢复记录
-        function restoreFromRecycleBin(recordId) {
+        async function restoreFromRecycleBin(recordId) {
             const recordIndex = recycleBin.findIndex(r => r.id === recordId);
             if (recordIndex === -1) return;
             
@@ -2947,7 +3088,7 @@
             
             // 更新缓存和显示
             updateSummaryCache();
-            saveToLocalStorage();
+            await saveToDatabase();
             updateHistoryDisplay();
             updateUserCardsDisplay();
             updateSummaryDisplay();
@@ -2960,13 +3101,13 @@
         }
         
         // 永久删除回收站记录
-        function deletePermanently(recordId) {
+        async function deletePermanently(recordId) {
             recycleBin = recycleBin.filter(r => r.id !== recordId);
             
             // 从选中集合中移除
             selectedRecycleIds.delete(recordId);
             
-            saveToLocalStorage();
+            await saveToDatabase();
             updateRecycleBadge();
             renderRecycleItems();
             updateBatchOperationsVisibility();
@@ -3122,14 +3263,14 @@
         }
         
         // 批量删除历史记录
-        function batchDelete(type) {
+        async function batchDelete(type) {
             if (type === 'history') {
                 if (selectedHistoryIds.size === 0) return;
                 
                 if (confirm(`确定要删除选中的 ${selectedHistoryIds.size} 条记录吗？此操作将移至回收站。`)) {
-                    selectedHistoryIds.forEach(id => {
-                        moveToRecycleBin(id);
-                    });
+                    for (const id of selectedHistoryIds) {
+                        await moveToRecycleBin(id);
+                    }
                     selectedHistoryIds.clear();
                     updateBatchOperationsVisibility();
                 }
@@ -3137,27 +3278,27 @@
         }
         
         // 批量移动历史记录到回收站
-        function batchMoveToRecycle(type) {
+        async function batchMoveToRecycle(type) {
             if (type === 'history') {
                 if (selectedHistoryIds.size === 0) return;
                 
-                selectedHistoryIds.forEach(id => {
-                    moveToRecycleBin(id);
-                });
+                for (const id of selectedHistoryIds) {
+                    await moveToRecycleBin(id);
+                }
                 selectedHistoryIds.clear();
                 updateBatchOperationsVisibility();
             }
         }
         
         // 批量恢复回收站记录
-        function batchRestore(type) {
+        async function batchRestore(type) {
             if (type === 'recycle') {
                 if (selectedRecycleIds.size === 0) return;
                 
                 if (confirm(`确定要恢复选中的 ${selectedRecycleIds.size} 条记录吗？`)) {
-                    selectedRecycleIds.forEach(id => {
-                        restoreFromRecycleBin(id);
-                    });
+                    for (const id of selectedRecycleIds) {
+                        await restoreFromRecycleBin(id);
+                    }
                     selectedRecycleIds.clear();
                     updateBatchOperationsVisibility();
                 }
@@ -3165,14 +3306,14 @@
         }
         
         // 批量永久删除回收站记录
-        function batchDeletePermanent(type) {
+        async function batchDeletePermanent(type) {
             if (type === 'recycle') {
                 if (selectedRecycleIds.size === 0) return;
                 
                 if (confirm(`确定要永久删除选中的 ${selectedRecycleIds.size} 条记录吗？此操作不可恢复！`)) {
-                    selectedRecycleIds.forEach(id => {
-                        deletePermanently(id);
-                    });
+                    for (const id of selectedRecycleIds) {
+                        await deletePermanently(id);
+                    }
                     selectedRecycleIds.clear();
                     updateBatchOperationsVisibility();
                 }
@@ -3711,12 +3852,12 @@
         }
         
         // 清空所有数据（带确认提示）
-        function clearAllData() {
+        async function clearAllData() {
             historyRecords = [];
             recycleBin = [];
             selectedHistoryIds.clear();
             selectedRecycleIds.clear();
-            saveToLocalStorage();
+            await saveToDatabase();
             updateHistoryDisplay();
             updateUserCardsDisplay();
             updateSummaryDisplay();
@@ -3852,7 +3993,7 @@
         }
         
         // 确认导入
-        function confirmImport() {
+        async function confirmImport() {
             if (pendingImportRecords.length === 0) {
                 showToast('没有新记录可导入', 'warning');
                 closeImportPreview();
@@ -3860,7 +4001,7 @@
             }
             
             // 添加新记录到历史记录
-            pendingImportRecords.forEach(item => {
+            for (const item of pendingImportRecords) {
                 // 创建新的历史记录对象
                 const newRecord = {
                     id: Date.now() + Math.random(), // 确保ID唯一
@@ -3876,7 +4017,7 @@
                 
                 // 添加到历史记录
                 historyRecords.unshift(newRecord);
-            });
+            }
             
             // 更新显示
             updateHistoryDisplay();
@@ -3885,21 +4026,21 @@
             updateMyAccountCards();
             updateRecycleBadge();
             populateFilterOptions();
-            saveToLocalStorage();
+            await saveToDatabase();
             
             showToast(`成功导入 ${pendingImportRecords.length} 条新记录，过滤掉 ${pendingImportRecords.length - pendingImportRecords.length} 条重复记录`, 'success');
             closeImportPreview();
         }
         
         // 从JSON数据导入所有用户数据
-        function importAllDataFromJSON(jsonData) {
+        async function importAllDataFromJSON(jsonData) {
             try {
                 if (!Array.isArray(jsonData)) {
                     throw new Error("导入的数据不是有效的历史记录数组");
                 }
                 
                 let importedCount = 0;
-                jsonData.forEach(item => {
+                for (const item of jsonData) {
                     // 检查数据格式
                     if (item.originalData && item.timestamp && item.applicant && item.category) {
                         // 创建新的历史记录对象
@@ -3919,7 +4060,7 @@
                         historyRecords.unshift(newRecord);
                         importedCount++;
                     }
-                });
+                }
                 
                 // 更新显示
                 updateHistoryDisplay();
@@ -3928,7 +4069,7 @@
                 updateMyAccountCards();
                 updateRecycleBadge();
                 populateFilterOptions();
-                saveToLocalStorage();
+                await saveToDatabase();
                 
                 showToast(`成功导入 ${importedCount} 条历史记录！`, 'success');
             } catch (error) {
@@ -3947,11 +4088,11 @@
                 if (!file) return;
                 
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     try {
                         const content = e.target.result;
                         const importedData = JSON.parse(content);
-                        importAllDataFromJSON(importedData);
+                        await importAllDataFromJSON(importedData);
                     } catch (error) {
                         showToast(`导入失败: ${error.message}`, 'error');
                         console.error(error);
