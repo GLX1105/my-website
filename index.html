@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>订单报表系统（赔付明细整数显示版）- 大容量储存版</title>
+    <title>订单报表系统（V4.17版）</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -242,7 +242,7 @@
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h2><i class="fas fa-lock"></i> 系统访问受限</h2>
-            <p>请输入访问密码以继续使用订单报表系统</p>
+            <p>请输入访问密码</p>
             <input type="password" id="accessPassword" class="login-input" placeholder="输入访问密码">
             <div class="login-error" id="loginError">密码错误，请重试！</div>
             <button class="login-btn" onclick="checkAccessPassword()">进入系统</button>
@@ -570,11 +570,9 @@
         const RECYCLE_STORE_NAME = "recycleBin";
         const DB_VERSION = 1;
         
-        // 密码哈希值（使用简单哈希，实际应用应使用更安全的方法）
-        const PASSWORD_HASHES = {
-            access: "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e", // 160601的SHA-256
-            operation: "f0a0a5d8a25b6f8e6e8e6e8e6e8e6e8e6e8e6e8e6e8e6e8e6e8e6e8e6e8e6e8" // 891105的SHA-256
-        };
+        // 密码设置（明文，简单易用）
+        const ACCESS_PASSWORD = "160601";
+        const OPERATION_PASSWORD = "891105";
         
         // 自动备份系统
         class AutoBackup {
@@ -849,12 +847,10 @@
             }
         }
         
-        // 检查访问密码（使用哈希验证）
+        // 检查访问密码（使用明文验证）
         async function checkAccessPassword() {
             const pwd = document.getElementById('accessPassword').value;
-            const hashedPwd = await simpleHash(pwd);
-            
-            if (hashedPwd === PASSWORD_HASHES.access) {
+            if (pwd === ACCESS_PASSWORD) {
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'flex';
                 try {
@@ -869,15 +865,6 @@
                 document.getElementById('accessPassword').value = '';
                 document.getElementById('accessPassword').focus();
             }
-        }
-        
-        // 简单哈希函数（实际应用中应使用更安全的哈希算法）
-        async function simpleHash(str) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(str);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
         
         // 从数据库加载数据
@@ -907,19 +894,17 @@
         // 请求清空密码
         function requestClearPassword() {
             currentOperation = 'clear';
-            document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码：891105';
+            document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码';
             document.getElementById('passwordDialog').style.display = 'flex';
             document.getElementById('operationPassword').value = '';
             document.getElementById('passwordError').style.display = 'none';
             document.getElementById('operationPassword').focus();
         }
         
-        // 验证操作密码（使用哈希验证）
+        // 验证操作密码（使用明文验证）
         async function verifyOperationPassword() {
             const pwd = document.getElementById('operationPassword').value;
-            const hashedPwd = await simpleHash(pwd);
-            
-            if (currentOperation === 'clear' && hashedPwd === PASSWORD_HASHES.operation) {
+            if (currentOperation === 'clear' && pwd === OPERATION_PASSWORD) {
                 closePasswordDialog();
                 showClearConfirm();
             } else {
