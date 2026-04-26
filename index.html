@@ -561,7 +561,7 @@
                 inp.click();
             };
 
-            window.requestClearPassword = () => { currentOperation = 'clear'; document.getElementById('passwordPromptText').innerHTML = '请输入操作密码（891105）'; document.getElementById('passwordDialog').style.display = 'flex'; };
+            window.requestClearPassword = () => { currentOperation = 'clear'; document.getElementById('passwordPromptText').innerHTML = '请输入操作密码'; document.getElementById('passwordDialog').style.display = 'flex'; };
             window.verifyOperationPassword = () => { if (currentOperation === 'clear' && document.getElementById('operationPassword').value === OPERATION_PASSWORD) { closePasswordDialog(); if (confirm('确定清空所有数据？')) { clearDB('records'); clearDB('recycle_bin'); history = []; recycle = []; updateAll(); toast('已清空', 'success'); } } else { document.getElementById('passwordError').style.display = 'block'; } };
             window.closePasswordDialog = () => { document.getElementById('passwordDialog').style.display = 'none'; currentOperation = null; };
             window.clearInput = () => document.getElementById('orderData').value = '';
