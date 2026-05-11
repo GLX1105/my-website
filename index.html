@@ -1,4 +1,49 @@
 <!DOCTYPE html>
+<script>
+// ==============================================
+// 1. 只允许在你自己的 GitHub 域名运行
+// ==============================================
+const allowHost = "glx1105.github.io";
+if (location.host !== allowHost) {
+  document.documentElement.innerHTML = "<h1>未授权站点</h1>";
+  throw new Error("Unauthorized");
+}
+
+// ==============================================
+// 2. 检测是否打开开发者工具 → 直接报错卡死
+// ==============================================
+let devtools = { open: false };
+setInterval(() => {
+  const before = new Date().getTime();
+  debugger;
+  const after = new Date().getTime();
+  if (after - before > 100) {
+    devtools.open = true;
+  }
+}, 100);
+
+setInterval(() => {
+  if (devtools.open) {
+    document.body.innerHTML = "<h1>检测到非法调试</h1>";
+    throw new Error("DevTools detected");
+  }
+}, 500);
+
+// ==============================================
+// 3. 禁止右键、禁止F12、禁止查看源码
+// ==============================================
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("keydown", e => {
+  if (
+    e.key === "F12" ||
+    (e.ctrlKey && e.key === "u") ||
+    (e.ctrlKey && e.shiftKey && e.key === "i")
+  ) {
+    e.preventDefault();
+  }
+});
+</script>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
