@@ -601,7 +601,7 @@ document.addEventListener("keydown", e => {
                 <div class="days-input-wrapper">
                     <div class="days-input-group">
                         <label><i class="fas fa-hourglass-half"></i> 往前</label>
-                        <input type="number" id="daysForwardInput" class="days-number-input" min="1" value="30" step="1">
+                        <input type="number" id="daysForwardInput" class="days-number-input" min="1" value="" step="1" placeholder="输入天数">
                         <span>天</span>
                     </div>
                     <button class="clear-days-btn" onclick="clearDaysFilter()">
@@ -609,10 +609,11 @@ document.addEventListener("keydown", e => {
                     </button>
                 </div>
                 <div class="days-range-info" id="daysRangeInfo">
-                    显示最近30天数据
+                    请输入天数筛选
                 </div>
             </div>
-                        <div class="search-filter-section">
+            
+            <div class="search-filter-section">
                 <div class="search-box">
                     <input type="text" id="searchInput" class="search-input" placeholder="搜索用户、日期或分类...">
                     <button class="search-btn" onclick="applyFilters()">
@@ -739,7 +740,8 @@ document.addEventListener("keydown", e => {
             </div>
         </div>
     </div>
-        <script>
+
+    <script>
         // ==============================================
         // 自定义右键菜单（复制/粘贴）- 整个网页通用，支持从外部粘贴
         // ==============================================
@@ -756,7 +758,6 @@ document.addEventListener("keydown", e => {
             menu.style.left = x + 'px';
             menu.style.top = y + 'px';
             
-            // 复制选项 - 复制选中的文本
             const copyItem = document.createElement('div');
             copyItem.className = 'custom-context-menu-item';
             copyItem.innerHTML = '<i class="fas fa-copy"></i> 复制';
@@ -781,7 +782,6 @@ document.addEventListener("keydown", e => {
             };
             menu.appendChild(copyItem);
             
-            // 粘贴选项 - 从剪贴板读取内容并粘贴到当前输入框（支持从外部复制）
             const pasteItem = document.createElement('div');
             pasteItem.className = 'custom-context-menu-item';
             pasteItem.innerHTML = '<i class="fas fa-paste"></i> 粘贴';
@@ -1049,7 +1049,7 @@ document.addEventListener("keydown", e => {
         let currentOperation = null, exportFormat = 'json', pendingImportRecords = [];
         let autoBackup, performanceMonitor;
         let daysFilterActive = false;
-        let daysForwardValue = 30;
+        let daysForwardValue = null;
         
         window.onload = async function() {
             try {
@@ -1135,18 +1135,24 @@ document.addEventListener("keydown", e => {
             const daysInput = document.getElementById('daysForwardInput');
             daysInput.addEventListener('input', function() {
                 let val = parseInt(this.value);
-                if (isNaN(val) || val < 1) {
-                    val = 1;
-                    this.value = 1;
+                if (!isNaN(val) && val >= 1) {
+                    daysForwardValue = val;
+                    daysFilterActive = true;
+                    updateDaysRangeInfo();
+                    refreshRightSidePanels();
+                } else if (this.value === '') {
+                    daysFilterActive = false;
+                    daysForwardValue = null;
+                    refreshRightSidePanels();
+                    const baseDate = document.getElementById('dateFilter').value || getChinaToday();
+                    const infoDiv = document.getElementById('daysRangeInfo');
+                    infoDiv.innerHTML = `请输入天数筛选`;
                 }
-                daysForwardValue = val;
-                daysFilterActive = true;
-                updateDaysRangeInfo();
-                refreshRightSidePanels();
             });
         }
         
         function updateDaysRangeInfo() {
+            if (!daysFilterActive || daysForwardValue === null) return;
             const baseDate = document.getElementById('dateFilter').value || getChinaToday();
             const startDate = getDateBeforeDays(baseDate, daysForwardValue - 1);
             const endDate = baseDate;
@@ -1178,13 +1184,13 @@ document.addEventListener("keydown", e => {
         
         function clearDaysFilter() {
             daysFilterActive = false;
-            daysForwardValue = 30;
-            document.getElementById('daysForwardInput').value = 30;
+            daysForwardValue = null;
+            document.getElementById('daysForwardInput').value = '';
             const baseDate = document.getElementById('dateFilter').value || getChinaToday();
             const infoDiv = document.getElementById('daysRangeInfo');
             const baseDisplay = document.getElementById('baseDateDisplay');
             baseDisplay.textContent = baseDate;
-            infoDiv.innerHTML = `天数筛选已清除，仅显示当天数据`;
+            infoDiv.innerHTML = `请输入天数筛选`;
             refreshRightSidePanels();
             showToast('已清除天数筛选', 'info');
         }
@@ -1203,8 +1209,7 @@ document.addEventListener("keydown", e => {
             
             let records = [...historyRecords];
             
-            // 天数筛选优先级高于日期筛选
-            if (daysFilterActive) {
+            if (daysFilterActive && daysForwardValue !== null) {
                 const baseDate = dateFilterValue || getChinaToday();
                 records = records.filter(r => isDateInRange(r.timestamp, baseDate, daysForwardValue));
             } else if (dateFilterValue) {
@@ -1269,7 +1274,9 @@ document.addEventListener("keydown", e => {
             document.getElementById('historyDateFilter').max = '2030-12-31';
             
             document.getElementById('dateFilter').addEventListener('change', function() {
-                updateDaysRangeInfo();
+                if (daysFilterActive && daysForwardValue !== null) {
+                    updateDaysRangeInfo();
+                }
                 refreshRightSidePanels();
                 updateHistoryDisplay();
             });
@@ -1505,15 +1512,15 @@ document.addEventListener("keydown", e => {
                     if (idx < dispCount) {
                         const amt = data[idx], str = amt.toString();
                         const cls = str.length > 6 ? ' class="small-font"' : '';
-                        html += `<td><span class="serial-number">${idx+1}</span></td><td${cls}><span class="order-amount">${amt}</span></td>`;
-                    } else html += `<td><\/td><td>`;
+                        html += `<tr><span class="serial-number">${idx+1}</span><tr><td${cls}><span class="order-amount">${amt}</span></td>`;
+                    } else html += `<td><\/td><tr>`;
                 }
                 html += '</tr>';
             }
             if (!showAll && count > dispCount) {
-                html += `<tr><td colspan="${cols*2}" style="text-align:center;color:#7f8c8d;font-style:italic;padding:8px;">还有 ${count - dispCount} 条记录未显示（共 ${count} 条）<br><button class="btn btn-secondary" style="margin-top:5px;" onclick="showFullTable(${count})">显示全部 ${count} 条记录</button></td></tr>`;
+                html += `<tr><td colspan="${cols*2}" style="text-align:center;color:#7f8c8d;font-style:italic;padding:8px;">还有 ${count - dispCount} 条记录未显示（共 ${count} 条）<br><button class="btn btn-secondary" style="margin-top:5px;" onclick="showFullTable(${count})">显示全部 ${count} 条记录</button><\/td></tr>`;
             }
-            html += `</tbody></table></div><div style="margin-top:10px;font-size:0.9rem;color:#7f8c8d;text-align:right;">显示 ${dispCount} 条记录，按 ${cols} 列 × ${dispRows} 行显示${!showAll && count > dispCount ? `(共 ${count} 条记录)` : ''}</div>`;
+            html += `</tbody></tr></div><div style="margin-top:10px;font-size:0.9rem;color:#7f8c8d;text-align:right;">显示 ${dispCount} 条记录，按 ${cols} 列 × ${dispRows} 行显示${!showAll && count > dispCount ? `(共 ${count} 条记录)` : ''}</div>`;
             return html;
         }
         
@@ -2023,7 +2030,7 @@ document.addEventListener("keydown", e => {
         }
         
         function applyFilters() {
-            if (daysFilterActive) updateDaysRangeInfo();
+            if (daysFilterActive && daysForwardValue !== null) updateDaysRangeInfo();
             refreshRightSidePanels();
             updateHistoryDisplay();
         }
