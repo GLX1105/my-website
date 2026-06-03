@@ -363,8 +363,20 @@ document.addEventListener("keydown", e => {
         .pay-me { background-color: rgba(46,204,113,0.2); color: #27ae60; }
         .pay-you { background-color: rgba(231,76,60,0.2); color: #c0392b; }
         
-        /* 用户卡片样式 - 三行布局 */
-        .user-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 12px; margin-bottom: 12px; border: 1px solid #e1e8f0; transition: all 0.3s ease; width: calc(33.333% - 10px); min-width: 0; }
+        /* 用户卡片样式 - 三行布局 + 盈亏贴底 */
+        .user-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #e1e8f0;
+            transition: all 0.3s ease;
+            width: calc(33.333% - 10px);
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
         .user-card:last-child { margin-bottom: 0; }
         .user-card:hover { transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
         .user-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.85rem; }
@@ -382,7 +394,7 @@ document.addEventListener("keydown", e => {
         .winning-item { display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.8rem; }
         .winning-type { color: #555; }
         .winning-amount { color: #27ae60; font-weight: 600; }
-        .profit-loss { font-weight: 600; padding: 2px 5px; border-radius: 3px; font-size: 0.8rem; margin-top: 6px; text-align: right; }
+        .profit-loss { font-weight: 600; padding: 2px 5px; border-radius: 3px; font-size: 0.8rem; margin-top: auto; text-align: right; padding-top: 6px; border-top: 1px solid #eee; }
         .dynamic-table-container { margin-top: 10px; width: 100%; overflow: auto; }
         .dynamic-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: auto; border: 1px solid #e1e8f0; border-radius: 6px; overflow: hidden; }
         .dynamic-table th, .dynamic-table td { border: 1px solid #e1e8f0; padding: 6px 4px; text-align: center; word-break: break-all; }
@@ -425,8 +437,18 @@ document.addEventListener("keydown", e => {
         .status-new { background: rgba(46,204,113,0.2); color: #27ae60; }
         .status-duplicate { background: rgba(231,76,60,0.2); color: #c0392b; }
         .import-preview-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        
+        /* 汇总卡片和我的账户卡片 - 盈亏贴底 */
         .summary-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .summary-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 12px; border: 1px solid #e1e8f0; }
+        .summary-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 12px;
+            border: 1px solid #e1e8f0;
+            display: flex;
+            flex-direction: column;
+        }
         .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
         .summary-title { font-weight: 600; color: #2c3e50; font-size: 1rem; }
         .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -443,7 +465,19 @@ document.addEventListener("keydown", e => {
         .winning-summary-amount { font-weight: 600; }
         .winning-summary-amount.positive { color: #27ae60; }
         .winning-summary-amount.negative { color: #e74c3c; }
-        #userCardsContainer { display: flex; flex-wrap: wrap; gap: 15px; }
+        .summary-profit-row {
+            margin-top: auto;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+        .summary-profit-label { font-weight: 600; color: #2c3e50; }
+        .summary-profit-value { font-weight: 600; font-size: 0.9rem; }
+        
+        #userCardsContainer { display: flex; flex-wrap: wrap; gap: 15px; align-items: stretch; }
         .my-account-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .history-date-selector { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.9); padding: 6px 12px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .history-date-input { background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 8px; font-size: 0.85rem; color: #333; cursor: pointer; }
@@ -673,8 +707,8 @@ document.addEventListener("keydown", e => {
                     <div class="label-row">
                         <label for="orderData">订单数据录入</label>
                         <span class="tag-input-inline">
-                            <label for="customTag">独立标签：</label>
-                            <input type="text" id="customTag" class="tag-input" placeholder="可选" autocomplete="off">
+                            <label for="customTag">开奖号码：</label>
+                            <input type="text" id="customTag" class="tag-input" placeholder="" autocomplete="off">
                         </span>
                     </div>
                     <div class="input-with-categories">
@@ -714,10 +748,6 @@ document.addEventListener("keydown", e => {
             <div class="history-section">
                 <div class="history-controls">
                     <h2 class="section-title"><i class="fas fa-history"></i> 历史记录 <span class="counter" id="recordCounter">0</span></h2>
-                    <div class="history-date-selector">
-                        <label for="historyDateFilter"><i class="fas fa-calendar-day"></i> 选择日期：</label>
-                        <input type="date" id="historyDateFilter" class="history-date-input">
-                    </div>
                     <div class="history-user-selector">
                         <label for="historyUserFilter"><i class="fas fa-user"></i> 选择用户：</label>
                         <select id="historyUserFilter" class="history-user-select">
@@ -1393,6 +1423,32 @@ document.addEventListener("keydown", e => {
             return records;
         }
         
+        // 获取历史记录筛选数据（不使用天数筛选，只用日期+分类+用户）
+        function getHistoryFilteredRecords() {
+            const dateFilterValue = document.getElementById('dateFilter').value;
+            const categoryFilterValue = document.getElementById('categoryFilter').value;
+            const userFilterValue = document.getElementById('userFilter').value;
+            const filterUser = document.getElementById('historyUserFilter').value;
+            
+            let records = [...historyRecords];
+            
+            if (dateFilterValue) {
+                records = records.filter(r => r.timestamp === dateFilterValue);
+            }
+            
+            if (categoryFilterValue) {
+                records = records.filter(r => r.category === categoryFilterValue);
+            }
+            
+            // 用户筛选优先使用历史记录自己的用户选择器，如果没有则用右侧的
+            const effectiveUserFilter = filterUser || userFilterValue;
+            if (effectiveUserFilter) {
+                records = records.filter(r => r.applicant === effectiveUserFilter);
+            }
+            
+            return records;
+        }
+        
         function requestClearPassword() {
             currentOperation = 'clear';
             document.getElementById('passwordPromptText').innerHTML = '清空操作需要密码保护<br>请输入密码';
@@ -1427,9 +1483,6 @@ document.addEventListener("keydown", e => {
             document.getElementById('dateFilter').value = today;
             document.getElementById('dateFilter').min = '2020-01-01';
             document.getElementById('dateFilter').max = '2030-12-31';
-            document.getElementById('historyDateFilter').value = today;
-            document.getElementById('historyDateFilter').min = '2020-01-01';
-            document.getElementById('historyDateFilter').max = '2030-12-31';
             
             document.getElementById('dateFilter').addEventListener('change', function() {
                 if (daysFilterActive && daysForwardValue !== null) {
@@ -1438,17 +1491,10 @@ document.addEventListener("keydown", e => {
                 refreshRightSidePanels();
                 updateHistoryDisplay();
             });
-            
-            document.getElementById('historyDateFilter').addEventListener('change', function() {
-                updateHistoryUserFilter();
-                updateHistoryDisplay();
-            });
-            
-            document.getElementById('historyUserFilter').addEventListener('change', updateHistoryDisplay);
         }
         
         function updateHistoryUserFilter() {
-            const filterDate = document.getElementById('historyDateFilter').value;
+            const filterDate = document.getElementById('dateFilter').value;
             const userFilter = document.getElementById('historyUserFilter');
             let users = [];
             if (filterDate) {
@@ -1639,8 +1685,7 @@ document.addEventListener("keydown", e => {
                 try { populateFilterOptions(); } catch(e) {}
                 updateRecycleBadge();
                 document.getElementById('orderData').value = '';
-                document.getElementById('customTag').value = '';
-                customTagValue = '';
+                // 不清空开奖号码输入框
                 errorMsg.style.display = 'none';
                 successMsg.style.display = 'block';
                 showToast('报表已成功保存！', 'success');
@@ -1721,13 +1766,12 @@ document.addEventListener("keydown", e => {
         function updateHistoryDisplay() {
             const container = document.getElementById('historyContainer');
             const counter = document.getElementById('recordCounter');
-            const filterDate = document.getElementById('historyDateFilter').value;
             const filterUser = document.getElementById('historyUserFilter').value;
-            let records = historyRecords;
-            if (filterDate) records = records.filter(r => r.timestamp === filterDate);
+            let records = getHistoryFilteredRecords();
+            // 再应用历史记录自己的用户筛选
             if (filterUser) records = records.filter(r => r.applicant === filterUser);
             counter.textContent = records.length;
-            if (records.length === 0) { container.innerHTML = `<div class="empty-history"><i class="fas fa-clock" style="font-size: 2.5rem; margin-bottom: 10px; color: #bdc3c7;"></i><p>${filterDate?'该日期无记录':'暂无记录'}</p></div>`; return; }
+            if (records.length === 0) { container.innerHTML = `<div class="empty-history"><i class="fas fa-clock" style="font-size: 2.5rem; margin-bottom: 10px; color: #bdc3c7;"></i><p>暂无记录</p></div>`; return; }
             let html = '';
             records.forEach((r, i) => {
                 const sel = selectedHistoryIds.has(r.id);
@@ -1918,7 +1962,7 @@ document.addEventListener("keydown", e => {
                 html += `<div class="user-info-row"><span class="info-label">订单总额:</span><span class="info-value">${total}</span></div>`;
                 html += `<div class="winning-section"><div class="winning-title"><i class="fas fa-trophy"></i> 中奖情况</div>`;
                 Object.entries(data.winnings).forEach(([type, amt]) => { html += `<div class="winning-item"><span class="winning-type">${type}:</span><span class="winning-amount">${Math.trunc(parseFloat(amt||0))}</span></div>`; });
-                html += `</div><div class="profit-loss ${cls}"><i class="fas ${icon}"></i> 盈亏: ${profit}</div></div>`;
+                html += `</div><div class="profit-loss ${cls}"><i class="fas ${icon}"></i> 盈亏: ${profit >= 0 ? '+' : ''}${profit}</div></div>`;
             });
             container.innerHTML = html;
         }
@@ -1958,9 +2002,9 @@ document.addEventListener("keydown", e => {
                 const sign = totalProfit >= 0 ? '+' : '';
                 const currentDate = document.getElementById('dateFilter').value || getChinaToday();
                 const currentPeriod = getPeriodFromDate(currentDate);
-                html += `<div class="summary-card"><div class="summary-header"><i class="${cat.icon}" style="color:${cat.color};"></i><div class="summary-title">${cat.name} - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${cls}">${sign}${totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
+                html += `<div class="summary-card"><div class="summary-header"><i class="${cat.icon}" style="color:${cat.color};"></i><div class="summary-title">${cat.name} - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${totalAmount}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
                 if (Object.keys(winnings).length > 0) { Object.entries(winnings).forEach(([t, a]) => { const aCls = a >= 0 ? 'positive' : 'negative'; const aSign = a >= 0 ? '+' : ''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
-                html += `</div></div>`;
+                html += `</div><div class="summary-profit-row"><span class="summary-profit-label">盈亏总额</span><span class="summary-profit-value ${cls}">${sign}${totalProfit}</span></div></div>`;
             });
             html += '</div>';
             container.innerHTML = html;
@@ -1987,11 +2031,25 @@ document.addEventListener("keydown", e => {
             gdAwards.forEach(t => { myGd.winnings[t] = (sumData['粤港下家'].winnings[t] || 0) - (sumData['粤港上家'].winnings[t] || 0); });
             const currentDate = document.getElementById('dateFilter').value || getChinaToday();
             const currentPeriod = getPeriodFromDate(currentDate);
-            let html = `<div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#2ecc71;"></i><div class="summary-title">我的澳门 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myMacau.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myMacau.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myMacau.totalProfit >=0?'+':''}${myMacau.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
-            if (Object.keys(myMacau.winnings).length > 0) { Object.entries(myMacau.winnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
-            html += `</div></div><div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#f1c40f;"></i><div class="summary-title">我的粤港 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myGd.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myGd.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myGd.totalProfit >=0?'+':''}${myGd.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
-            if (Object.keys(myGd.winnings).length > 0) { Object.entries(myGd.winnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
-            html += `</div></div>`;
+            
+            // 过滤掉中奖为0的项目
+            const filteredMacauWinnings = {};
+            Object.entries(myMacau.winnings).forEach(([t, a]) => { if (a !== 0) filteredMacauWinnings[t] = a; });
+            const filteredGdWinnings = {};
+            Object.entries(myGd.winnings).forEach(([t, a]) => { if (a !== 0) filteredGdWinnings[t] = a; });
+            
+            const macauCls = myMacau.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
+            const macauSign = myMacau.totalProfit >= 0 ? '+' : '';
+            const gdCls = myGd.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
+            const gdSign = myGd.totalProfit >= 0 ? '+' : '';
+            
+            let html = `<div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#2ecc71;"></i><div class="summary-title">我的澳门 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myMacau.totalAmount}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
+            if (Object.keys(filteredMacauWinnings).length > 0) { Object.entries(filteredMacauWinnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
+            html += `</div><div class="summary-profit-row"><span class="summary-profit-label">盈亏总额</span><span class="summary-profit-value ${macauCls}">${macauSign}${myMacau.totalProfit}</span></div></div>`;
+            
+            html += `<div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#f1c40f;"></i><div class="summary-title">我的粤港 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myGd.totalAmount}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
+            if (Object.keys(filteredGdWinnings).length > 0) { Object.entries(filteredGdWinnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
+            html += `</div><div class="summary-profit-row"><span class="summary-profit-label">盈亏总额</span><span class="summary-profit-value ${gdCls}">${gdSign}${myGd.totalProfit}</span></div></div>`;
             container.innerHTML = html;
         }
         
@@ -2007,8 +2065,7 @@ document.addEventListener("keydown", e => {
         
         function clearInput() {
             document.getElementById('orderData').value = '';
-            document.getElementById('customTag').value = '';
-            customTagValue = '';
+            // 不清空开奖号码
             document.getElementById('errorMsg').style.display = 'none';
             document.getElementById('successMsg').style.display = 'none';
         }
@@ -2185,7 +2242,7 @@ document.addEventListener("keydown", e => {
         }
         
         function exportToCSV() {
-            let csv = "ID,日期,分类,申报人,订单总额,盈亏情况,中奖情况,独立标签,原始数据\n";
+            let csv = "ID,日期,分类,申报人,订单总额,盈亏情况,中奖情况,开奖号码,原始数据\n";
             historyRecords.forEach(r => {
                 const d = r.extractedData;
                 const total = Math.trunc(parseFloat(d.totalAmount || 0));
@@ -2216,9 +2273,13 @@ document.addEventListener("keydown", e => {
         
         function applyFilters() {
             if (daysFilterActive && daysForwardValue !== null) updateDaysRangeInfo();
+            updateHistoryUserFilter();
             refreshRightSidePanels();
             updateHistoryDisplay();
         }
+        
+        // 历史记录用户筛选器变化事件
+        document.getElementById('historyUserFilter').addEventListener('change', updateHistoryDisplay);
         
         document.getElementById('accessPassword').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAccessPassword(); });
         document.getElementById('operationPassword').addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyOperationPassword(); });
