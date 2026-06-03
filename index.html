@@ -52,182 +52,145 @@ document.addEventListener("keydown", e => {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #1a2a6c, #2c3e50); color: #333; min-height: 100vh; padding: 0; margin: 0; }
-        
-        /* 全宽导航栏 */
-        .navbar-full {
-            background: linear-gradient(90deg, #1a3a6c, #2c5aa0);
-            color: white;
-            padding: 8px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            width: 100%;
-        }
-        .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            max-width: 100%;
-        }
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-        .navbar-brand i { font-size: 1.2rem; }
-        .nav-buttons {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .nav-btn {
-            background: rgba(255,255,255,0.18);
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .nav-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); }
-        .recycle-bin-btn { position: relative; }
-        .recycle-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #e74c3c;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* 主容器 - 左侧70% 右侧30% */
-        .container { 
-            max-width: 100%; 
-            width: 100%; 
-            margin: 0; 
-            display: flex; 
-            gap: 20px; 
-            padding: 15px 20px;
-        }
-        .main-content { 
-            width: 70%; 
-            min-width: 0; 
-        }
-        .user-sidebar { 
-            width: 30%; 
-            background: rgba(255,255,255,0.1); 
-            border-radius: 10px; 
-            padding: 15px; 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255,255,255,0.2);
-            min-width: 0;
-        }
-        
-        @media (max-width: 1200px) {
-            .container { flex-direction: column; }
-            .main-content, .user-sidebar { width: 100%; }
-        }
-        
+        body { background: linear-gradient(135deg, #1a2a6c, #2c3e50); color: #333; min-height: 100vh; padding: 15px; display: block; }
+        .container { max-width: 1700px; width: 100%; margin: 0 auto; display: flex; gap: 20px; }
+        .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 10000; }
+        .login-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); text-align: center; width: 350px; }
+        .login-box h2 { color: #2c3e50; margin-bottom: 20px; font-size: 1.5rem; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem; }
+        .login-btn { background: linear-gradient(to right, #3498db, #2980b9); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 600; width: 100%; margin-top: 15px; transition: all 0.3s; }
+        .login-btn:hover { background: linear-gradient(to right, #2980b9, #2573a7); transform: translateY(-2px); }
+        .login-error { color: #e74c3c; margin-top: 10px; display: none; }
+        .main-content { flex: 1; min-width: 0; }
+        .user-sidebar { width: 530px; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
         .sidebar-title { color: white; font-size: 1.2rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; gap: 8px; }
         .big-user-card { background: white; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); overflow: hidden; margin-bottom: 20px; width: 100%; }
         .big-card-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px 15px; font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .big-card-content { padding: 15px; max-height: none; overflow-y: visible; }
         
-        /* 天数筛选器样式 */
+        /* 天数筛选器样式 - 缩小优化版 */
         .days-filter-section {
             background: white;
             border-radius: 8px;
             padding: 10px 12px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 12px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.08);
         }
         .base-date-info {
             font-size: 0.75rem;
             color: #3498db;
             margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #eee;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .days-input-wrapper {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
+            margin-bottom: 6px;
         }
-        .days-input-wrapper span { font-size: 0.8rem; color: #555; }
+        .days-input-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f8f9fa;
+            padding: 4px 10px;
+            border-radius: 16px;
+            border: 1px solid #e1e8f0;
+        }
+        .days-input-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
         .days-number-input {
             width: 55px;
-            padding: 5px 6px;
+            padding: 4px 6px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             text-align: center;
+            height: 28px;
+        }
+        .days-number-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52,152,219,0.2);
         }
         .clear-days-btn {
             background: #95a5a6;
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 4px 10px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 3px;
+            height: 28px;
         }
-        .clear-days-btn:hover { background: #7f8c8d; }
+        .clear-days-btn:hover {
+            background: #7f8c8d;
+            transform: translateY(-1px);
+        }
         .days-range-info {
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             color: #27ae60;
             background: #e8f8f0;
-            padding: 5px 8px;
+            padding: 4px 8px;
             border-radius: 4px;
-            margin-top: 8px;
+            display: inline-block;
         }
         
-        /* 筛选区域 - 无搜索框 */
+        /* 筛选区域样式 */
         .filter-section {
             background: white;
             border-radius: 8px;
             padding: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .filter-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+        .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-item { display: flex; flex-direction: column; gap: 2px; }
+        .filter-label { font-size: 0.75rem; color: #666; font-weight: 500; }
+        .filter-select, .filter-date { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem; background: white; min-width: 100px; }
+        .filter-date { width: 120px; }
+        
+        /* 新增：标签输入框样式 */
+        .tag-input-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
         }
-        .filter-item {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .filter-label {
-            font-size: 0.7rem;
+        .tag-input-inline label {
+            font-size: 0.8rem;
             color: #666;
             font-weight: 500;
+            margin: 0;
+            white-space: nowrap;
         }
-        .filter-select, .filter-date {
+        .tag-input-inline input {
+            width: 120px;
             padding: 5px 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 0.8rem;
-            background: white;
+            font-size: 0.85rem;
+            height: 30px;
         }
-        .filter-date { width: 115px; }
+        .tag-input-inline input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52,152,219,0.2);
+        }
         
         .navbar { background: linear-gradient(90deg, #1a3a6c, #2c5aa0); color: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); padding: 8px 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
         .navbar-brand { display: flex; align-items: center; gap: 6px; font-size: 1.1rem; font-weight: 600; }
@@ -245,22 +208,6 @@ document.addEventListener("keydown", e => {
         .section-title i { color: #3498db; font-size: 1.1rem; }
         .input-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: 600; color: #2c3e50; font-size: 0.9rem; }
-        .label-with-input {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-        .label-with-input label { margin-bottom: 0; }
-        .prize-input {
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            width: 140px;
-        }
-        .prize-input:focus { outline: none; border-color: #3498db; }
         .input-with-categories { display: flex; gap: 15px; align-items: flex-start; }
         #orderData { width: 65%; height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; resize: vertical; transition: border-color 0.3s; color: #333; }
         #orderData:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.2); }
@@ -302,17 +249,18 @@ document.addEventListener("keydown", e => {
         .profit-tag { font-weight: bold; margin-left: 15px; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
         .pay-me { background-color: rgba(46,204,113,0.2); color: #27ae60; }
         .pay-you { background-color: rgba(231,76,60,0.2); color: #c0392b; }
+        
+        /* 用户卡片样式 - 三行布局 */
         .user-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 12px; margin-bottom: 12px; border: 1px solid #e1e8f0; transition: all 0.3s ease; width: calc(33.333% - 10px); min-width: 0; }
         .user-card:last-child { margin-bottom: 0; }
         .user-card:hover { transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
-        .user-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
-        .user-info-left { display: flex; flex-direction: column; gap: 4px; }
-        .user-name { font-weight: 600; color: #2c3e50; font-size: 0.95rem; }
-        .user-category { font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; display: inline-block; }
-        .user-right-info { text-align: right; }
-        .user-period { font-size: 0.75rem; color: #e74c3c; font-weight: 600; }
-        .user-prize-tag { font-size: 0.7rem; color: #8e44ad; font-weight: 500; margin-top: 2px; }
-        .user-date { font-size: 0.7rem; color: #7f8c8d; margin-top: 4px; }
+        .user-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.85rem; }
+        .user-card-row:last-child { margin-bottom: 0; }
+        .user-card-name { font-weight: 600; color: #2c3e50; font-size: 0.95rem; }
+        .user-card-period { font-weight: 600; color: #2980b9; font-size: 0.85rem; }
+        .user-card-category { font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .user-card-tag { font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; display: inline-block; background: rgba(155,89,182,0.15); color: #8e44ad; font-weight: 500; }
+        .user-card-date { font-size: 0.75rem; color: #7f8c8d; }
         .user-info-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 0.85rem; }
         .info-label { font-weight: 500; color: #555; }
         .info-value { font-weight: 600; color: #2980b9; }
@@ -485,40 +433,34 @@ document.addEventListener("keydown", e => {
             background: #eee;
             margin: 4px 0;
         }
+        
+        /* 标签输入框行内样式 */
+        .label-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .label-row label {
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+        .label-row .tag-input {
+            width: 130px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            height: 30px;
+        }
+        .label-row .tag-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52,152,219,0.2);
+        }
     </style>
 </head>
 <body>
-    <!-- 全宽导航栏 -->
-    <div class="navbar-full">
-        <div class="navbar-content">
-            <div class="navbar-brand">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <span>订单报表系统</span>
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="document.getElementById('fileInput').click()">
-                    <i class="fas fa-file-import"></i> 导入订单
-                </button>
-                <button class="nav-btn" onclick="showFormatSelector()">
-                    <i class="fas fa-file-export"></i> 导出订单
-                </button>
-                <button class="nav-btn" onclick="importAllData()">
-                    <i class="fas fa-database"></i> 导入所有数据
-                </button>
-                <button class="nav-btn" onclick="exportAllData()">
-                    <i class="fas fa-database"></i> 导出所有数据
-                </button>
-                <button class="nav-btn recycle-bin-btn" onclick="toggleRecyclePanel()">
-                    <i class="fas fa-trash-restore"></i> 回收站
-                    <span class="recycle-badge" id="recycleBadge">0</span>
-                </button>
-                <button class="nav-btn" onclick="requestClearPassword()">
-                    <i class="fas fa-trash-alt"></i> 清空
-                </button>
-            </div>
-        </div>
-    </div>
-    
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h2><i class="fas fa-lock"></i> 系统访问受限</h2>
@@ -604,7 +546,33 @@ document.addEventListener("keydown", e => {
     
     <div class="container" id="mainContainer" style="display: none;">
         <div class="main-content">
-            <div class="navbar" style="display: none;"></div>
+            <div class="navbar">
+                <div class="navbar-brand">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>订单报表系统</span>
+                </div>
+                <div class="nav-buttons">
+                    <button class="nav-btn" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-file-import"></i> 导入订单
+                    </button>
+                    <button class="nav-btn" onclick="showFormatSelector()">
+                        <i class="fas fa-file-export"></i> 导出订单
+                    </button>
+                    <button class="nav-btn" onclick="importAllData()">
+                        <i class="fas fa-database"></i> 导入所有数据
+                    </button>
+                    <button class="nav-btn" onclick="exportAllData()">
+                        <i class="fas fa-database"></i> 导出所有数据
+                    </button>
+                    <button class="nav-btn recycle-bin-btn" onclick="toggleRecyclePanel()">
+                        <i class="fas fa-trash-restore"></i> 回收站
+                        <span class="recycle-badge" id="recycleBadge">0</span>
+                    </button>
+                    <button class="nav-btn" onclick="requestClearPassword()">
+                        <i class="fas fa-trash-alt"></i> 清空
+                    </button>
+                </div>
+            </div>
             
             <header>
                 <h1><i class="fas fa-chart-line"></i> 订单报表系统</h1>
@@ -618,9 +586,12 @@ document.addEventListener("keydown", e => {
                     <input type="date" id="reportDate" class="date-input">
                 </div>
                 <div class="input-group">
-                    <div class="label-with-input">
+                    <div class="label-row">
                         <label for="orderData">订单数据录入</label>
-                        <input type="text" id="prizeTagInput" class="prize-input" placeholder="开奖标签（如：特等奖）">
+                        <span class="tag-input-inline">
+                            <label for="customTag">独立标签：</label>
+                            <input type="text" id="customTag" class="tag-input" placeholder="可选" autocomplete="off">
+                        </span>
                     </div>
                     <div class="input-with-categories">
                         <textarea id="orderData"></textarea>
@@ -691,15 +662,18 @@ document.addEventListener("keydown", e => {
         </div>
         
         <div class="user-sidebar">
-            <!-- 天数筛选器区域 -->
+            <!-- 天数筛选器区域 - 缩小优化版 -->
             <div class="days-filter-section">
                 <div class="base-date-info">
                     <i class="fas fa-calendar-check"></i>
                     <span>基于日期：<strong id="baseDateDisplay">-</strong></span>
                 </div>
                 <div class="days-input-wrapper">
-                    <span><i class="fas fa-hourglass-half"></i> 往前</span>
-                    <input type="number" id="daysForwardInput" class="days-number-input" min="1" value="" step="1" placeholder="天">
+                    <div class="days-input-group">
+                        <label><i class="fas fa-hourglass-half"></i> 往前</label>
+                        <input type="number" id="daysForwardInput" class="days-number-input" min="1" value="" step="1" placeholder="天数">
+                        <span>天</span>
+                    </div>
                     <button class="clear-days-btn" onclick="clearDaysFilter()">
                         <i class="fas fa-times"></i> 清除
                     </button>
@@ -709,7 +683,7 @@ document.addEventListener("keydown", e => {
                 </div>
             </div>
             
-            <!-- 筛选区域（无搜索框，只保留日期、分类、用户筛选） -->
+            <!-- 筛选区域：日期、分类、用户 -->
             <div class="filter-section">
                 <div class="filter-group">
                     <div class="filter-item">
@@ -834,7 +808,7 @@ document.addEventListener("keydown", e => {
 
     <script>
         // ==============================================
-        // 辅助函数：根据日期获取期数
+        // 辅助函数：根据日期获取期数（该年在第几天，两位数）
         // ==============================================
         function getPeriodFromDate(dateStr) {
             const date = new Date(dateStr);
@@ -845,7 +819,7 @@ document.addEventListener("keydown", e => {
         }
         
         // ==============================================
-        // 自定义右键菜单（复制/粘贴）
+        // 自定义右键菜单（复制/粘贴）- 整个网页通用，支持从外部粘贴
         // ==============================================
         let currentContextMenu = null;
         
@@ -1152,6 +1126,7 @@ document.addEventListener("keydown", e => {
         let autoBackup, performanceMonitor;
         let daysFilterActive = false;
         let daysForwardValue = null;
+        let customTagValue = ''; // 新增：独立标签值
         
         window.onload = async function() {
             try {
@@ -1162,6 +1137,13 @@ document.addEventListener("keydown", e => {
                 autoBackup = new AutoBackup();
                 performanceMonitor = new PerformanceMonitor();
                 document.getElementById('orderData').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        saveRecord();
+                    }
+                });
+                // 新增：监听独立标签输入框回车键保存
+                document.getElementById('customTag').addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         saveRecord();
@@ -1439,10 +1421,12 @@ document.addEventListener("keydown", e => {
             const saveBtn = document.getElementById('saveBtn');
             saveBtn.classList.add('loading');
             const orderDataInput = document.getElementById('orderData').value;
-            const prizeTag = document.getElementById('prizeTagInput').value.trim();
             const errorMsg = document.getElementById('errorMsg');
             const successMsg = document.getElementById('successMsg');
             const dateInput = document.getElementById('reportDate');
+            
+            // 获取独立标签值
+            customTagValue = document.getElementById('customTag').value.trim();
             
             try {
                 performanceMonitor.measure('validateOrderData', () => {
@@ -1474,7 +1458,7 @@ document.addEventListener("keydown", e => {
                     return;
                 }
                 
-                await directSaveRecord(selectedDate, selectedCategory, applicant, orderDataInput, orderData, dataCount, extractedData, prizeTag);
+                await directSaveRecord(selectedDate, selectedCategory, applicant, orderDataInput, orderData, dataCount, extractedData);
             } catch (e) {
                 errorMsg.textContent = e.message;
                 errorMsg.style.display = 'block';
@@ -1539,12 +1523,11 @@ document.addEventListener("keydown", e => {
             const orderData = parseOrderData(filteredData);
             const dataCount = orderData.length;
             const extractedData = extractOrderData(orderDataInput, applicant);
-            const prizeTag = document.getElementById('prizeTagInput').value.trim();
-            await directSaveRecord(date, selectedCategory, applicant, orderDataInput, orderData, dataCount, extractedData, prizeTag);
+            await directSaveRecord(date, selectedCategory, applicant, orderDataInput, orderData, dataCount, extractedData);
             hideDuplicateDialog();
         }
         
-        async function directSaveRecord(date, category, applicant, input, orderData, dataCount, extractedData, prizeTag) {
+        async function directSaveRecord(date, category, applicant, input, orderData, dataCount, extractedData) {
             const errorMsg = document.getElementById('errorMsg');
             const successMsg = document.getElementById('successMsg');
             const saveBtn = document.getElementById('saveBtn');
@@ -1554,12 +1537,12 @@ document.addEventListener("keydown", e => {
                     timestamp: date,
                     category,
                     applicant,
-                    prizeTag: prizeTag || '',
                     originalData: input,
                     tableHTML: createDynamicTableHTML(orderData, dataCount, true),
                     compensationCardHTML: createCompensationCardHTML(input, category),
                     dataCount,
                     extractedData,
+                    customTag: customTagValue, // 新增：保存独立标签
                     createdAt: new Date().toISOString()
                 };
                 const validation = DataValidator.validateRecord(record);
@@ -1574,7 +1557,8 @@ document.addEventListener("keydown", e => {
                 try { populateFilterOptions(); } catch(e) {}
                 updateRecycleBadge();
                 document.getElementById('orderData').value = '';
-                document.getElementById('prizeTagInput').value = '';
+                document.getElementById('customTag').value = ''; // 清空标签输入框
+                customTagValue = '';
                 errorMsg.style.display = 'none';
                 successMsg.style.display = 'block';
                 showToast('报表已成功保存！', 'success');
@@ -1609,13 +1593,13 @@ document.addEventListener("keydown", e => {
                     if (idx < dispCount) {
                         const amt = data[idx], str = amt.toString();
                         const cls = str.length > 6 ? ' class="small-font"' : '';
-                        html += `<td><span class="serial-number">${idx+1}</span></td><td${cls}><span class="order-amount">${amt}</span></tr>`;
-                    } else html += `<td><\/td></td>`;
+                        html += `<td><span class="serial-number">${idx+1}</span></td><td${cls}><span class="order-amount">${amt}</span></td>`;
+                    } else html += `<td></td><td></td>`;
                 }
                 html += '</tr>';
             }
             if (!showAll && count > dispCount) {
-                html += `<tr><td colspan="${cols*2}" style="text-align:center;color:#7f8c8d;font-style:italic;padding:8px;">还有 ${count - dispCount} 条记录未显示（共 ${count} 条）<br><button class="btn btn-secondary" style="margin-top:5px;" onclick="showFullTable(${count})">显示全部 ${count} 条记录</button><\/td></tr>`;
+                html += `<tr><td colspan="${cols*2}" style="text-align:center;color:#7f8c8d;font-style:italic;padding:8px;">还有 ${count - dispCount} 条记录未显示（共 ${count} 条）<br><button class="btn btn-secondary" style="margin-top:5px;" onclick="showFullTable(${count})">显示全部 ${count} 条记录</button></td></tr>`;
             }
             html += `</tbody></table></div><div style="margin-top:10px;font-size:0.9rem;color:#7f8c8d;text-align:right;">显示 ${dispCount} 条记录，按 ${cols} 列 × ${dispRows} 行显示${!showAll && count > dispCount ? `(共 ${count} 条记录)` : ''}</div>`;
             return html;
@@ -1665,8 +1649,7 @@ document.addEventListener("keydown", e => {
             let html = '';
             records.forEach((r, i) => {
                 const sel = selectedHistoryIds.has(r.id);
-                const prizeTag = r.prizeTag || '';
-                html += `<div class="history-card" data-id="${r.id}"><div class="history-card-select"><input type="checkbox" class="history-checkbox" ${sel?'checked':''} onchange="toggleHistorySelection(${r.id},this.checked)"></div><div class="history-header"><div><span class="category-tag highlight-applicant"><i class="fas fa-user"></i> ${r.applicant}</span><span>订单报表 #${i+1}</span><span class="category-tag ${getCategoryClass(r.category)} highlight-category">${r.category}</span><span style="margin-left:8px;">${prizeTag}</span></div><div style="display:flex;align-items:center;gap:8px;"><span class="history-time">${r.timestamp}</span><button class="delete-btn" onclick="showDeleteConfirm(${r.id})"><i class="fas fa-trash"></i></button></div></div><div class="history-body"><div class="history-content">${r.tableHTML}${r.compensationCardHTML}</div></div></div>`;
+                html += `<div class="history-card" data-id="${r.id}"><div class="history-card-select"><input type="checkbox" class="history-checkbox" ${sel?'checked':''} onchange="toggleHistorySelection(${r.id},this.checked)"></div><div class="history-header"><div><span class="category-tag highlight-applicant"><i class="fas fa-user"></i> ${r.applicant}</span><span>订单报表 #${i+1}</span><span class="category-tag ${getCategoryClass(r.category)} highlight-category">${r.category}</span></div><div style="display:flex;align-items:center;gap:8px;"><span class="history-time">${r.timestamp}</span><button class="delete-btn" onclick="showDeleteConfirm(${r.id})"><i class="fas fa-trash"></i></button></div></div><div class="history-body"><div class="history-content">${r.tableHTML}${r.compensationCardHTML}</div></div></div>`;
             });
             container.innerHTML = html;
             updateBatchOperationsVisibility();
@@ -1755,8 +1738,7 @@ document.addEventListener("keydown", e => {
             let html = '';
             recycleBin.forEach(r => {
                 const sel = selectedRecycleIds.has(r.id);
-                const prizeTag = r.prizeTag || '';
-                html += `<div class="recycle-item" data-id="${r.id}"><div class="recycle-item-header"><div style="display:flex;align-items:center;"><input type="checkbox" class="recycle-checkbox recycle-item-select" ${sel?'checked':''} onchange="toggleRecycleSelection(${r.id},this.checked)"><div><strong class="highlight-applicant">${r.applicant}</strong> - ${r.timestamp}<span class="category-tag ${getCategoryClass(r.category)} highlight-category">${r.category}</span><span style="margin-left:8px;">${prizeTag}</span></div></div><div><button class="restore-btn" onclick="restoreFromRecycleBin(${r.id})"><i class="fas fa-undo"></i> 恢复</button><button class="delete-permanently-btn" onclick="deletePermanently(${r.id})"><i class="fas fa-trash"></i> 删除</button></div></div><div class="recycle-item-content">${r.compensationCardHTML}</div></div>`;
+                html += `<div class="recycle-item" data-id="${r.id}"><div class="recycle-item-header"><div style="display:flex;align-items:center;"><input type="checkbox" class="recycle-checkbox recycle-item-select" ${sel?'checked':''} onchange="toggleRecycleSelection(${r.id},this.checked)"><div><strong class="highlight-applicant">${r.applicant}</strong> - ${r.timestamp}<span class="category-tag ${getCategoryClass(r.category)} highlight-category">${r.category}</span></div></div><div><button class="restore-btn" onclick="restoreFromRecycleBin(${r.id})"><i class="fas fa-undo"></i> 恢复</button><button class="delete-permanently-btn" onclick="deletePermanently(${r.id})"><i class="fas fa-trash"></i> 删除</button></div></div><div class="recycle-item-content">${r.compensationCardHTML}</div></div>`;
             });
             container.innerHTML = html;
             updateBatchOperationsVisibility();
@@ -1826,6 +1808,7 @@ document.addEventListener("keydown", e => {
             }
         }
         
+        // 更新用户卡片显示（三行布局：名称+期数 / 分类+标签 / 日期）
         function updateUserCardsDisplay() {
             const container = document.getElementById('userCardsContainer');
             const records = getFilteredRecords();
@@ -1839,22 +1822,24 @@ document.addEventListener("keydown", e => {
                 const icon = profit >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
                 const catCls = getCategoryClass(r.category);
                 const period = getPeriodFromDate(r.timestamp);
-                const prizeTag = r.prizeTag || '';
-                html += `<div class="user-card">
-                    <div class="user-card-header">
-                        <div class="user-info-left">
-                            <div class="user-name">${data.applicant}</div>
-                            <span class="user-category category-tag ${catCls}">${r.category}</span>
-                        </div>
-                        <div class="user-right-info">
-                            <div class="user-period">${period}</div>
-                            <div class="user-prize-tag">${prizeTag}</div>
-                            <div class="user-date">${r.timestamp}</div>
-                        </div>
-                    </div>
-                    <div class="user-info-row"><span class="info-label">订单总额:</span><span class="info-value">${total}</span></div>
-                    <div class="winning-section">
-                        <div class="winning-title"><i class="fas fa-trophy"></i> 中奖情况</div>`;
+                const tagText = r.customTag || '';
+                
+                html += `<div class="user-card">`;
+                // 第一行：名称（左）—— 期数（右）
+                html += `<div class="user-card-row"><span class="user-card-name">${data.applicant}</span><span class="user-card-period">${period}</span></div>`;
+                // 第二行：分类（左）—— 独立标签（右）
+                html += `<div class="user-card-row"><span class="user-card-category category-tag ${catCls}">${r.category}</span>`;
+                if (tagText) {
+                    html += `<span class="user-card-tag">${tagText}</span>`;
+                } else {
+                    html += `<span></span>`;
+                }
+                html += `</div>`;
+                // 第三行：日期
+                html += `<div class="user-card-row"><span class="user-card-date">${r.timestamp}</span></div>`;
+                // 其他信息
+                html += `<div class="user-info-row"><span class="info-label">订单总额:</span><span class="info-value">${total}</span></div>`;
+                html += `<div class="winning-section"><div class="winning-title"><i class="fas fa-trophy"></i> 中奖情况</div>`;
                 Object.entries(data.winnings).forEach(([type, amt]) => { html += `<div class="winning-item"><span class="winning-type">${type}:</span><span class="winning-amount">${Math.trunc(parseFloat(amt||0))}</span></div>`; });
                 html += `</div><div class="profit-loss ${cls}"><i class="fas ${icon}"></i> 盈亏: ${profit}</div></div>`;
             });
@@ -1876,6 +1861,7 @@ document.addEventListener("keydown", e => {
             });
         }
         
+        // 更新汇总显示（添加期数显示）
         function updateSummaryDisplay() {
             const container = document.getElementById('summaryContainer');
             const records = getFilteredRecords();
@@ -1894,9 +1880,10 @@ document.addEventListener("keydown", e => {
                 });
                 const cls = totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
                 const sign = totalProfit >= 0 ? '+' : '';
+                // 获取当前日期筛选器的期数（用于显示在标题上）
                 const currentDate = document.getElementById('dateFilter').value || getChinaToday();
-                const period = getPeriodFromDate(currentDate);
-                html += `<div class="summary-card"><div class="summary-header"><i class="${cat.icon}" style="color:${cat.color};"></i><div class="summary-title">${cat.name} - ${period}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${cls}">${sign}${totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
+                const currentPeriod = getPeriodFromDate(currentDate);
+                html += `<div class="summary-card"><div class="summary-header"><i class="${cat.icon}" style="color:${cat.color};"></i><div class="summary-title">${cat.name} - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${cls}">${sign}${totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
                 if (Object.keys(winnings).length > 0) { Object.entries(winnings).forEach(([t, a]) => { const aCls = a >= 0 ? 'positive' : 'negative'; const aSign = a >= 0 ? '+' : ''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
                 html += `</div></div>`;
             });
@@ -1904,6 +1891,7 @@ document.addEventListener("keydown", e => {
             container.innerHTML = html;
         }
         
+        // 更新我的账户卡片（添加期数显示）
         function updateMyAccountCards() {
             const container = document.getElementById('myAccountContainer');
             const records = getFilteredRecords();
@@ -1924,10 +1912,10 @@ document.addEventListener("keydown", e => {
             const gdAwards = new Set([...Object.keys(sumData['粤港下家'].winnings), ...Object.keys(sumData['粤港上家'].winnings)]);
             gdAwards.forEach(t => { myGd.winnings[t] = (sumData['粤港下家'].winnings[t] || 0) - (sumData['粤港上家'].winnings[t] || 0); });
             const currentDate = document.getElementById('dateFilter').value || getChinaToday();
-            const period = getPeriodFromDate(currentDate);
-            let html = `<div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#2ecc71;"></i><div class="summary-title">我的澳门 - ${period}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myMacau.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myMacau.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myMacau.totalProfit >=0?'+':''}${myMacau.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
+            const currentPeriod = getPeriodFromDate(currentDate);
+            let html = `<div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#2ecc71;"></i><div class="summary-title">我的澳门 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myMacau.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myMacau.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myMacau.totalProfit >=0?'+':''}${myMacau.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
             if (Object.keys(myMacau.winnings).length > 0) { Object.entries(myMacau.winnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
-            html += `</div></div><div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#f1c40f;"></i><div class="summary-title">我的粤港 - ${period}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myGd.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myGd.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myGd.totalProfit >=0?'+':''}${myGd.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
+            html += `</div></div><div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#f1c40f;"></i><div class="summary-title">我的粤港 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myGd.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myGd.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myGd.totalProfit >=0?'+':''}${myGd.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
             if (Object.keys(myGd.winnings).length > 0) { Object.entries(myGd.winnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
             html += `</div></div>`;
             container.innerHTML = html;
@@ -1945,7 +1933,8 @@ document.addEventListener("keydown", e => {
         
         function clearInput() {
             document.getElementById('orderData').value = '';
-            document.getElementById('prizeTagInput').value = '';
+            document.getElementById('customTag').value = '';
+            customTagValue = '';
             document.getElementById('errorMsg').style.display = 'none';
             document.getElementById('successMsg').style.display = 'none';
         }
@@ -1973,7 +1962,8 @@ document.addEventListener("keydown", e => {
                 updateRecycleBadge();
                 try { populateFilterOptions(); } catch(e) {}
                 document.getElementById('orderData').value = '';
-                document.getElementById('prizeTagInput').value = '';
+                document.getElementById('customTag').value = '';
+                customTagValue = '';
                 initDatePickers();
                 showToast('所有数据已清空！', 'success');
                 try { updateStorageIndicator(); } catch(e) {}
@@ -2033,7 +2023,7 @@ document.addEventListener("keydown", e => {
             if (pendingImportRecords.length === 0) { showToast('没有新记录可导入', 'warning'); closeImportPreview(); return; }
             try {
                 for (const item of pendingImportRecords) {
-                    const newRec = { id: Date.now() + Math.random(), timestamp: item.timestamp, category: item.category || '未知分类', applicant: item.applicant, prizeTag: item.prizeTag || '', originalData: item.originalData, tableHTML: item.tableHTML || '', compensationCardHTML: item.compensationCardHTML || '', dataCount: item.dataCount || 0, extractedData: item.extractedData || {}, createdAt: new Date().toISOString() };
+                    const newRec = { id: Date.now() + Math.random(), timestamp: item.timestamp, category: item.category || '未知分类', applicant: item.applicant, originalData: item.originalData, tableHTML: item.tableHTML || '', compensationCardHTML: item.compensationCardHTML || '', dataCount: item.dataCount || 0, extractedData: item.extractedData || {}, customTag: item.customTag || '', createdAt: new Date().toISOString() };
                     const validation = DataValidator.validateRecord(newRec);
                     if (!validation.valid) continue;
                     historyRecords.unshift(newRec);
@@ -2052,7 +2042,7 @@ document.addEventListener("keydown", e => {
                 let cnt = 0;
                 for (const item of data) {
                     if (item.originalData && item.timestamp && item.applicant && item.category) {
-                        const newRec = { id: Date.now() + Math.random(), timestamp: item.timestamp, category: item.category, applicant: item.applicant, prizeTag: item.prizeTag || '', originalData: item.originalData, tableHTML: item.tableHTML || '', compensationCardHTML: item.compensationCardHTML || '', dataCount: item.dataCount || 0, extractedData: item.extractedData || {}, createdAt: new Date().toISOString() };
+                        const newRec = { id: Date.now() + Math.random(), timestamp: item.timestamp, category: item.category, applicant: item.applicant, originalData: item.originalData, tableHTML: item.tableHTML || '', compensationCardHTML: item.compensationCardHTML || '', dataCount: item.dataCount || 0, extractedData: item.extractedData || {}, customTag: item.customTag || '', createdAt: new Date().toISOString() };
                         const validation = DataValidator.validateRecord(newRec);
                         if (!validation.valid) continue;
                         historyRecords.unshift(newRec);
@@ -2088,7 +2078,7 @@ document.addEventListener("keydown", e => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `订单报表系统_所有数据_${getChinaToday()}.json`;
+                a.download = `订单报表系统_所有数据_${new Date().toISOString().slice(0,10)}.json`;
                 a.click();
                 setTimeout(() => URL.revokeObjectURL(url), 0);
                 showToast('所有数据导出成功！', 'success');
@@ -2109,31 +2099,31 @@ document.addEventListener("keydown", e => {
         
         function exportToTXT() {
             let content = '';
-            historyRecords.forEach((r, i) => { content += `=== 订单报表 #${i+1} (${r.timestamp}) [${r.category}] 申报人：${r.applicant} 标签：${r.prizeTag || '无'} ===\n${r.originalData}\n\n`; });
+            historyRecords.forEach((r, i) => { content += `=== 订单报表 #${i+1} (${r.timestamp}) [${r.category}] 申报人：${r.applicant} ===\n${r.originalData}\n\n`; });
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `订单报表_${getChinaToday()}.txt`;
+            a.download = `订单报表_${new Date().toISOString().slice(0,10)}.txt`;
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 0);
             showToast('TXT导出成功！', 'success');
         }
         
         function exportToCSV() {
-            let csv = "ID,日期,分类,申报人,开奖标签,订单总额,盈亏情况,中奖情况,原始数据\n";
+            let csv = "ID,日期,分类,申报人,订单总额,盈亏情况,中奖情况,独立标签,原始数据\n";
             historyRecords.forEach(r => {
                 const d = r.extractedData;
                 const total = Math.trunc(parseFloat(d.totalAmount || 0));
                 const profit = Math.trunc(parseFloat(d.profitLoss || 0));
                 const winnings = Object.entries(d.winnings).map(([t,a]) => `${t}:${Math.trunc(parseFloat(a||0))}`).join('; ');
-                csv += `${r.id},${r.timestamp},${r.category},${r.applicant},${r.prizeTag || ''},${total},${profit},"${winnings}","${r.originalData.replace(/"/g, '""')}"\n`;
+                csv += `${r.id},${r.timestamp},${r.category},${r.applicant},${total},${profit},"${winnings}","${r.customTag || ''}","${r.originalData.replace(/"/g, '""')}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `订单报表_${getChinaToday()}.csv`;
+            a.download = `订单报表_${new Date().toISOString().slice(0,10)}.csv`;
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 0);
             showToast('CSV导出成功！', 'success');
@@ -2144,7 +2134,7 @@ document.addEventListener("keydown", e => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `订单报表_${getChinaToday()}.json`;
+            a.download = `订单报表_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 0);
             showToast('JSON导出成功！', 'success');
