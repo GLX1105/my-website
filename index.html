@@ -1764,7 +1764,7 @@ document.addEventListener("keydown", e => {
                         let amt = match[1], num = parseFloat(amt);
                         if (!isNaN(num)) amt = Math.trunc(num).toString();
                         const cls = num >= 0 ? 'profit-positive' : 'profit-negative';
-                        const sign = num >= 0 ? '+' : '';
+                        const sign = '';
                         let tag = '';
                         if (category.includes('下家')) tag = num > 0 ? '<span class="profit-tag pay-me">付我</span>' : num < 0 ? '<span class="profit-tag pay-you">付你</span>' : '';
                         else tag = num > 0 ? '<span class="profit-tag pay-you">付你</span>' : num < 0 ? '<span class="profit-tag pay-me">付我</span>' : '';
@@ -1979,7 +1979,7 @@ document.addEventListener("keydown", e => {
                 html += `<div class="user-info-row"><span class="info-label">订单总额:</span><span class="info-value">${total}</span></div>`;
                 html += `<div class="winning-section"><div class="winning-title"><i class="fas fa-trophy"></i> 中奖情况</div>`;
                 Object.entries(data.winnings).forEach(([type, amt]) => { html += `<div class="winning-item"><span class="winning-type">${type}:</span><span class="winning-amount">${Math.trunc(parseFloat(amt||0))}</span></div>`; });
-                html += `</div><div class="profit-loss ${cls}"><i class="fas ${icon}"></i> 盈亏: ${profit >= 0 ? '+' : ''}${profit}</div></div>`;
+                html += `</div><div class="profit-loss ${cls}"><i class="fas ${icon}"></i> 盈亏: ${profit}</div></div>`;
             });
             container.innerHTML = html;
         }
@@ -2016,7 +2016,7 @@ document.addEventListener("keydown", e => {
                     Object.entries(d.winnings).forEach(([t, a]) => { const amt = Math.trunc(parseFloat(a || 0)); winnings[t] = (winnings[t] || 0) + amt; });
                 });
                 const cls = totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
-                const sign = totalProfit >= 0 ? '+' : '';
+               const sign = '';
                 const currentDate = document.getElementById('dateFilter').value || getChinaToday();
                 const currentPeriod = getPeriodFromDate(currentDate);
                 html += `<div class="summary-card"><div class="summary-header"><i class="${cat.icon}" style="color:${cat.color};"></i><div class="summary-title">${cat.name} - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${totalAmount}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
@@ -2055,16 +2055,16 @@ document.addEventListener("keydown", e => {
             Object.entries(myGd.winnings).forEach(([t, a]) => { if (a !== 0) filteredGdWinnings[t] = a; });
             
             const macauCls = myMacau.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
-            const macauSign = myMacau.totalProfit >= 0 ? '+' : '';
+            const macauSign = '';
             const gdCls = myGd.totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
-            const gdSign = myGd.totalProfit >= 0 ? '+' : '';
+            const gdSign = '';
             
             let html = `<div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#2ecc71;"></i><div class="summary-title">我的澳门 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myMacau.totalAmount}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
-            if (Object.keys(filteredMacauWinnings).length > 0) { Object.entries(filteredMacauWinnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
+            if (Object.keys(filteredMacauWinnings).length > 0) { Object.entries(filteredMacauWinnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = ''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
             html += `</div><div class="summary-profit-row"><span class="summary-profit-label">盈亏总额</span><span class="summary-profit-value ${macauCls}">${macauSign}${myMacau.totalProfit}</span></div></div>`;
             
             html += `<div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#f1c40f;"></i><div class="summary-title">我的粤港 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myGd.totalAmount}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
-            if (Object.keys(filteredGdWinnings).length > 0) { Object.entries(filteredGdWinnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
+            if (Object.keys(filteredGdWinnings).length > 0) { Object.entries(filteredGdWinnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = ''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
             html += `</div><div class="summary-profit-row"><span class="summary-profit-label">盈亏总额</span><span class="summary-profit-value ${gdCls}">${gdSign}${myGd.totalProfit}</span></div></div>`;
             container.innerHTML = html;
         }
