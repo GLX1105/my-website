@@ -525,9 +525,35 @@ document.addEventListener("keydown", e => {
         .password-cancel { background: #95a5a6; }
         .password-cancel:hover { background: #7f8c8d; }
         .password-error { color: #e74c3c; margin-top: 10px; display: none; }
-        .storage-indicator { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; z-index: 1000; display: flex; align-items: center; gap: 8px; }
-        .storage-bar { width: 100px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
-        .storage-fill { height: 100%; background: linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c); transition: width 0.3s ease; }
+        
+        /* 存储指示器 - 透明背景四行布局 */
+        .storage-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: transparent;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            z-index: 1000;
+            min-width: 160px;
+        }
+        .storage-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 0;
+        }
+        .storage-label {
+            color: rgba(255,255,255,0.7);
+        }
+        .storage-value {
+            color: #e74c3c;
+            font-weight: 600;
+            text-align: right;
+        }
+        
         @media (max-width: 1400px) { .container { flex-direction: column; } .user-sidebar { width: 100%; flex: none; } }
         @media (max-width: 1200px) { .summary-container, .my-account-container { grid-template-columns: repeat(2, 1fr); } .user-card { width: calc(50% - 8px); } }
         @media (max-width: 992px) { .input-with-categories { flex-direction: column; } #orderData, .category-button-group { width: 100%; } .category-button-group { flex-direction: row; flex-wrap: wrap; } .category-btn { flex: 1; min-width: 120px; } }
@@ -665,11 +691,24 @@ document.addEventListener("keydown", e => {
     </div>
     
     <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- 存储指示器 - 透明背景四行布局 -->
     <div class="storage-indicator" id="storageIndicator">
-        <i class="fas fa-database"></i>
-        <span id="storageText">存储: 0KB/0KB</span>
-        <div class="storage-bar">
-            <div class="storage-fill" id="storageFill" style="width: 0%"></div>
+        <div class="storage-row">
+            <span class="storage-label">今日数量:</span>
+            <span class="storage-value" id="storageTodayCount">0</span>
+        </div>
+        <div class="storage-row">
+            <span class="storage-label">全部数量:</span>
+            <span class="storage-value" id="storageTotalCount">0</span>
+        </div>
+        <div class="storage-row">
+            <span class="storage-label">已用空间:</span>
+            <span class="storage-value" id="storageUsed">0KB</span>
+        </div>
+        <div class="storage-row">
+            <span class="storage-label">剩余空间:</span>
+            <span class="storage-value" id="storageFree">50MB</span>
         </div>
     </div>
     
@@ -1012,6 +1051,7 @@ document.addEventListener("keydown", e => {
         
         const ACCESS_PASSWORD = "160601";
         const OPERATION_PASSWORD = "891105";
+        const MAX_SIZE_MB = 50;
         
         function getChinaToday() {
             const now = new Date();
@@ -1240,20 +1280,31 @@ document.addEventListener("keydown", e => {
             }
         };
         
+        function formatSize(kb) {
+            if (kb < 1024) return kb.toFixed(1) + 'KB';
+            return (kb / 1024).toFixed(2) + 'MB';
+        }
+        
         async function updateStorageIndicator() {
             try {
                 const { size, count } = await getDatabaseSize();
-                const sizeKB = (size / 1024).toFixed(2);
-                const maxSizeMB = 50, maxSizeKB = maxSizeMB * 1024;
-                const percent = Math.min((size / maxSizeKB) * 100, 100);
-                document.getElementById('storageText').textContent = `存储: ${sizeKB}KB/${(maxSizeKB/1024).toFixed(0)}MB (${count}条)`;
-                document.getElementById('storageFill').style.width = percent + '%';
-                if (percent > 80) document.getElementById('storageFill').style.background = '#e74c3c';
-                else if (percent > 60) document.getElementById('storageFill').style.background = '#f1c40f';
-                else document.getElementById('storageFill').style.background = 'linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c)';
+                const sizeKB = size / 1024;
+                const maxSizeKB = MAX_SIZE_MB * 1024;
+                const freeKB = Math.max(0, maxSizeKB - sizeKB);
+                
+                // 今日数量：根据右侧筛选卡片日期
+                const filterDate = document.getElementById('dateFilter').value || getChinaToday();
+                const todayCount = historyRecords.filter(r => r.timestamp === filterDate).length;
+                
+                document.getElementById('storageTodayCount').textContent = todayCount;
+                document.getElementById('storageTotalCount').textContent = count;
+                document.getElementById('storageUsed').textContent = formatSize(sizeKB);
+                document.getElementById('storageFree').textContent = formatSize(freeKB);
             } catch (e) { 
-                document.getElementById('storageText').textContent = `存储: 计算中...`;
-                document.getElementById('storageFill').style.width = '0%';
+                document.getElementById('storageTodayCount').textContent = '...';
+                document.getElementById('storageTotalCount').textContent = '...';
+                document.getElementById('storageUsed').textContent = '...';
+                document.getElementById('storageFree').textContent = '...';
             }
         }
         
@@ -1294,6 +1345,7 @@ document.addEventListener("keydown", e => {
             updateRecycleBadge();
             populateFilterOptions();
             setInitialCategory();
+            updateStorageIndicator();
         }
         
         function initDaysFilterEvents() {
@@ -1391,7 +1443,6 @@ document.addEventListener("keydown", e => {
             return records;
         }
         
-        // 获取历史记录筛选数据（不使用天数筛选，只用日期+分类+用户）
         function getHistoryFilteredRecords() {
             const dateFilterValue = document.getElementById('dateFilter').value;
             const categoryFilterValue = document.getElementById('categoryFilter').value;
@@ -1408,7 +1459,6 @@ document.addEventListener("keydown", e => {
                 records = records.filter(r => r.category === categoryFilterValue);
             }
             
-            // 用户筛选优先使用历史记录自己的用户选择器，如果没有则用右侧的
             const effectiveUserFilter = filterUser || userFilterValue;
             if (effectiveUserFilter) {
                 records = records.filter(r => r.applicant === effectiveUserFilter);
@@ -1456,6 +1506,7 @@ document.addEventListener("keydown", e => {
                 if (daysFilterActive && daysForwardValue !== null) {
                     updateDaysRangeInfo();
                 }
+                updateStorageIndicator();
                 refreshRightSidePanels();
                 updateHistoryDisplay();
             });
@@ -1652,13 +1703,12 @@ document.addEventListener("keydown", e => {
                 updateMyAccountCards();
                 try { populateFilterOptions(); } catch(e) {}
                 updateRecycleBadge();
+                updateStorageIndicator();
                 document.getElementById('orderData').value = '';
-                // 不清空开奖号码输入框
                 errorMsg.style.display = 'none';
                 successMsg.style.display = 'block';
                 showToast('报表已成功保存！', 'success');
                 setTimeout(() => { successMsg.style.display = 'none'; saveBtn.classList.remove('loading'); }, 3000);
-                try { updateStorageIndicator(); } catch(e) {}
             } catch (e) {
                 errorMsg.textContent = e.message;
                 errorMsg.style.display = 'block';
@@ -1736,7 +1786,6 @@ document.addEventListener("keydown", e => {
             const counter = document.getElementById('recordCounter');
             const filterUser = document.getElementById('historyUserFilter').value;
             let records = getHistoryFilteredRecords();
-            // 再应用历史记录自己的用户筛选
             if (filterUser) records = records.filter(r => r.applicant === filterUser);
             counter.textContent = records.length;
             if (records.length === 0) { container.innerHTML = `<div class="empty-history"><i class="fas fa-clock" style="font-size: 2.5rem; margin-bottom: 10px; color: #bdc3c7;"></i><p>暂无记录</p></div>`; return; }
@@ -1777,8 +1826,8 @@ document.addEventListener("keydown", e => {
                 updateMyAccountCards();
                 updateRecycleBadge();
                 try { populateFilterOptions(); } catch(e) {}
+                updateStorageIndicator();
                 showToast('已移至回收站', 'warning');
-                try { updateStorageIndicator(); } catch(e) {}
             } catch(e) { showToast('移至回收站失败', 'error'); }
         }
         
@@ -1800,8 +1849,8 @@ document.addEventListener("keydown", e => {
                 updateRecycleBadge();
                 try { populateFilterOptions(); } catch(e) {}
                 toggleRecyclePanel();
+                updateStorageIndicator();
                 showToast('已恢复至原位置', 'success');
-                try { updateStorageIndicator(); } catch(e) {}
             } catch(e) { showToast('恢复失败', 'error'); }
         }
         
@@ -1813,8 +1862,8 @@ document.addEventListener("keydown", e => {
                 updateRecycleBadge();
                 renderRecycleItems();
                 updateBatchOperationsVisibility();
+                updateStorageIndicator();
                 showToast('已永久删除', 'error');
-                try { updateStorageIndicator(); } catch(e) {}
             } catch(e) { showToast('永久删除失败', 'error'); }
         }
         
@@ -2000,7 +2049,6 @@ document.addEventListener("keydown", e => {
             const currentDate = document.getElementById('dateFilter').value || getChinaToday();
             const currentPeriod = getPeriodFromDate(currentDate);
             
-            // 过滤掉中奖为0的项目
             const filteredMacauWinnings = {};
             Object.entries(myMacau.winnings).forEach(([t, a]) => { if (a !== 0) filteredMacauWinnings[t] = a; });
             const filteredGdWinnings = {};
@@ -2033,7 +2081,6 @@ document.addEventListener("keydown", e => {
         
         function clearInput() {
             document.getElementById('orderData').value = '';
-            // 不清空开奖号码
             document.getElementById('errorMsg').style.display = 'none';
             document.getElementById('successMsg').style.display = 'none';
         }
@@ -2064,8 +2111,8 @@ document.addEventListener("keydown", e => {
                 document.getElementById('customTag').value = '';
                 customTagValue = '';
                 initDatePickers();
+                updateStorageIndicator();
                 showToast('所有数据已清空！', 'success');
-                try { updateStorageIndicator(); } catch(e) {}
             } catch(e) { showToast('清空失败', 'error'); }
         }
         
@@ -2130,9 +2177,10 @@ document.addEventListener("keydown", e => {
                 }
                 updateHistoryDisplay(); updateUserCardsDisplay(); updateSummaryDisplay(); updateMyAccountCards(); updateRecycleBadge();
                 try { populateFilterOptions(); } catch(e) {}
+                updateStorageIndicator();
                 showToast(`成功导入 ${pendingImportRecords.length} 条新记录`, 'success');
             } catch(e) { showToast('导入失败', 'error'); }
-            finally { closeImportPreview(); try { updateStorageIndicator(); } catch(e) {} }
+            finally { closeImportPreview(); }
         }
         
         async function importAllDataFromJSON(data) {
@@ -2151,8 +2199,8 @@ document.addEventListener("keydown", e => {
                 }
                 updateHistoryDisplay(); updateUserCardsDisplay(); updateSummaryDisplay(); updateMyAccountCards(); updateRecycleBadge();
                 try { populateFilterOptions(); } catch(e) {}
+                updateStorageIndicator();
                 showToast(`成功导入 ${cnt} 条历史记录！`, 'success');
-                try { updateStorageIndicator(); } catch(e) {}
             } catch(e) { showToast(`导入失败: ${e.message}`, 'error'); }
         }
         
@@ -2242,11 +2290,11 @@ document.addEventListener("keydown", e => {
         function applyFilters() {
             if (daysFilterActive && daysForwardValue !== null) updateDaysRangeInfo();
             updateHistoryUserFilter();
+            updateStorageIndicator();
             refreshRightSidePanels();
             updateHistoryDisplay();
         }
         
-        // 历史记录用户筛选器变化事件
         document.getElementById('historyUserFilter').addEventListener('change', updateHistoryDisplay);
         
         document.getElementById('accessPassword').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAccessPassword(); });
