@@ -61,8 +61,8 @@ document.addEventListener("keydown", e => {
         .login-btn { background: linear-gradient(to right, #3498db, #2980b9); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 600; width: 100%; margin-top: 15px; transition: all 0.3s; }
         .login-btn:hover { background: linear-gradient(to right, #2980b9, #2573a7); transform: translateY(-2px); }
         .login-error { color: #e74c3c; margin-top: 10px; display: none; }
-        .main-content { flex: 1; min-width: 0; padding-left: 0; }
-        .user-sidebar { width: 530px; background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; margin-right: 0; }
+        .main-content { flex: 7; min-width: 0; padding-left: 0; }
+        .user-sidebar { flex: 3; background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; margin-right: 0; min-width: 0; }
         .big-user-card { background: white; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); overflow: hidden; margin-bottom: 15px; width: 100%; }
         .big-card-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 10px 14px; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .big-card-content { padding: 12px; max-height: none; overflow-y: visible; }
@@ -225,14 +225,98 @@ document.addEventListener("keydown", e => {
             box-shadow: 0 0 0 2px rgba(52,152,219,0.15);
         }
         
-        .navbar { background: linear-gradient(90deg, #1a3a6c, #2c5aa0); color: white; padding: 8px 16px; margin: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .navbar-brand { display: flex; align-items: center; gap: 6px; font-size: 1rem; font-weight: 600; }
-        .navbar-brand i { font-size: 1.1rem; }
-        .nav-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
-        .nav-btn { background: rgba(255,255,255,0.18); color: white; border: none; padding: 5px 10px; font-size: 0.8rem; font-weight: 500; border-radius: 4px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
-        .nav-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); }
+        /* 导航栏 - 通栏美化版 */
+        .navbar {
+            background: linear-gradient(135deg, #0f1f3d 0%, #1a3a6c 30%, #1e4d8c 60%, #1a3a6c 100%);
+            color: white;
+            padding: 10px 20px;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 100;
+        }
+        .navbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3498db, #667eea, #e74c3c, #667eea, #3498db);
+            opacity: 0.6;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .navbar-brand i {
+            font-size: 1.3rem;
+            color: #3498db;
+            filter: drop-shadow(0 0 4px rgba(52,152,219,0.5));
+        }
+        .nav-buttons { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .nav-btn {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 7px 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            backdrop-filter: blur(5px);
+            white-space: nowrap;
+        }
+        .nav-btn i {
+            font-size: 0.85rem;
+            transition: transform 0.25s ease;
+        }
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.35);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52,152,219,0.3);
+        }
+        .nav-btn:hover i {
+            transform: scale(1.15);
+        }
+        .nav-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(52,152,219,0.2);
+        }
         .recycle-bin-btn { position: relative; }
-        .recycle-badge { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+        .recycle-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            border: 2px solid #0f1f3d;
+            box-shadow: 0 2px 6px rgba(231,76,60,0.4);
+        }
         .input-section { background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 20px; margin-top: 10px; margin-bottom: 15px; }
         .section-title { font-size: 1.1rem; color: #2c3e50; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #3498db; display: flex; align-items: center; gap: 8px; }
         .section-title i { color: #3498db; font-size: 1rem; }
@@ -260,8 +344,8 @@ document.addEventListener("keydown", e => {
         .error { background: rgba(231,76,60,0.15); color: #c0392b; border: 1px solid #e74c3c; }
         .history-section { background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 18px; margin-top: 15px; }
         .history-controls { display: flex; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; align-items: center; }
-        .history-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(600px, 1fr)); gap: 15px; margin-top: 15px; }
-        .history-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; transition: transform 0.2s ease; min-width: 0; position: relative; }
+        .history-container { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
+        .history-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; transition: transform 0.2s ease; width: 100%; position: relative; }
         .history-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .history-header { background: linear-gradient(90deg, #1a3a6c, #2c5aa0); color: white; padding: 10px 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
         .history-time { font-size: 0.75rem; opacity: 0.85; }
@@ -403,7 +487,7 @@ document.addEventListener("keydown", e => {
         .storage-indicator { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; z-index: 1000; display: flex; align-items: center; gap: 8px; }
         .storage-bar { width: 100px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
         .storage-fill { height: 100%; background: linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c); transition: width 0.3s ease; }
-        @media (max-width: 1400px) { .container { flex-direction: column; } .user-sidebar { width: 100%; } }
+        @media (max-width: 1400px) { .container { flex-direction: column; } .user-sidebar { width: 100%; flex: none; } }
         @media (max-width: 1200px) { .summary-container, .my-account-container { grid-template-columns: repeat(2, 1fr); } .user-card { width: calc(50% - 8px); } }
         @media (max-width: 992px) { .input-with-categories { flex-direction: column; } #orderData, .category-button-group { width: 100%; } .category-button-group { flex-direction: row; flex-wrap: wrap; } .category-btn { flex: 1; min-width: 120px; } }
         @media (max-width: 768px) { .btn-group, .navbar, .history-container, .summary-container, .my-account-container { flex-direction: column; } .user-card { width: 100%; } .recycle-panel { width: 100%; right: -100%; } }
@@ -548,7 +632,7 @@ document.addEventListener("keydown", e => {
         </div>
     </div>
     
-    <!-- 导航栏 - 通栏贴边 -->
+    <!-- 导航栏 - 通栏美化版 -->
     <div class="navbar" id="mainNavbar" style="display: none;">
         <div class="navbar-brand">
             <i class="fas fa-file-invoice-dollar"></i>
@@ -562,10 +646,10 @@ document.addEventListener("keydown", e => {
                 <i class="fas fa-file-export"></i> 导出订单
             </button>
             <button class="nav-btn" onclick="importAllData()">
-                <i class="fas fa-database"></i> 导入所有数据
+                <i class="fas fa-database"></i> 导入数据
             </button>
             <button class="nav-btn" onclick="exportAllData()">
-                <i class="fas fa-database"></i> 导出所有数据
+                <i class="fas fa-download"></i> 导出数据
             </button>
             <button class="nav-btn recycle-bin-btn" onclick="toggleRecyclePanel()">
                 <i class="fas fa-trash-restore"></i> 回收站
