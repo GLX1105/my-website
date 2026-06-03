@@ -601,7 +601,7 @@ document.addEventListener("keydown", e => {
                 <div class="days-input-wrapper">
                     <div class="days-input-group">
                         <label><i class="fas fa-hourglass-half"></i> 往前</label>
-                        <input type="number" id="daysForwardInput" class="days-number-input" min="1" value="" step="1" placeholder="">
+                        <input type="number" id="daysForwardInput" class="days-number-input" min="1" value="" step="1" placeholder="输入天数">
                         <span>天</span>
                     </div>
                     <button class="clear-days-btn" onclick="clearDaysFilter()">
@@ -742,6 +742,17 @@ document.addEventListener("keydown", e => {
     </div>
 
     <script>
+        // ==============================================
+        // 辅助函数：根据日期获取期数（该年在第几天，两位数）
+        // ==============================================
+        function getPeriodFromDate(dateStr) {
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const start = new Date(year, 0, 0);
+            const dayOfYear = Math.floor((date - start) / (24 * 60 * 60 * 1000));
+            return String(dayOfYear).padStart(2, '0') + '期';
+        }
+        
         // ==============================================
         // 自定义右键菜单（复制/粘贴）- 整个网页通用，支持从外部粘贴
         // ==============================================
@@ -1506,21 +1517,21 @@ document.addEventListener("keydown", e => {
             for (let i = 0; i < cols; i++) html += `<th>序</th><th>下单</th>`;
             html += `</tr></thead><tbody>`;
             for (let r = 0; r < dispRows; r++) {
-                html += '<tr>';
+                html += '</tr>';
                 for (let c = 0; c < cols; c++) {
                     const idx = r + c * dispRows;
                     if (idx < dispCount) {
                         const amt = data[idx], str = amt.toString();
                         const cls = str.length > 6 ? ' class="small-font"' : '';
-                        html += `<tr><span class="serial-number">${idx+1}</span><tr><td${cls}><span class="order-amount">${amt}</span></td>`;
-                    } else html += `<td><\/td><tr>`;
+                        html += `<td><span class="serial-number">${idx+1}</span></td><td${cls}><span class="order-amount">${amt}</span></td>`;
+                    } else html += `<td></td><td></td>`;
                 }
-                html += '</tr>';
+                html += '<tr>';
             }
             if (!showAll && count > dispCount) {
-                html += `<tr><td colspan="${cols*2}" style="text-align:center;color:#7f8c8d;font-style:italic;padding:8px;">还有 ${count - dispCount} 条记录未显示（共 ${count} 条）<br><button class="btn btn-secondary" style="margin-top:5px;" onclick="showFullTable(${count})">显示全部 ${count} 条记录</button><\/td></tr>`;
+                html += `<tr><td colspan="${cols*2}" style="text-align:center;color:#7f8c8d;font-style:italic;padding:8px;">还有 ${count - dispCount} 条记录未显示（共 ${count} 条）<br><button class="btn btn-secondary" style="margin-top:5px;" onclick="showFullTable(${count})">显示全部 ${count} 条记录</button></td></tr>`;
             }
-            html += `</tbody></tr></div><div style="margin-top:10px;font-size:0.9rem;color:#7f8c8d;text-align:right;">显示 ${dispCount} 条记录，按 ${cols} 列 × ${dispRows} 行显示${!showAll && count > dispCount ? `(共 ${count} 条记录)` : ''}</div>`;
+            html += `</tbody></table></div><div style="margin-top:10px;font-size:0.9rem;color:#7f8c8d;text-align:right;">显示 ${dispCount} 条记录，按 ${cols} 列 × ${dispRows} 行显示${!showAll && count > dispCount ? `(共 ${count} 条记录)` : ''}</div>`;
             return html;
         }
         
@@ -1727,6 +1738,7 @@ document.addEventListener("keydown", e => {
             }
         }
         
+        // 更新用户卡片显示（添加期数显示）
         function updateUserCardsDisplay() {
             const container = document.getElementById('userCardsContainer');
             const records = getFilteredRecords();
@@ -1739,7 +1751,8 @@ document.addEventListener("keydown", e => {
                 const cls = profit >= 0 ? 'profit-positive' : 'profit-negative';
                 const icon = profit >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
                 const catCls = getCategoryClass(r.category);
-                html += `<div class="user-card"><div class="user-card-header"><div class="user-info-left"><div class="user-name">${data.applicant}</div><span class="user-category category-tag ${catCls}">${r.category}</span></div><div class="user-date">${r.timestamp}</div></div><div class="user-info-row"><span class="info-label">订单总额:</span><span class="info-value">${total}</span></div><div class="winning-section"><div class="winning-title"><i class="fas fa-trophy"></i> 中奖情况</div>`;
+                const period = getPeriodFromDate(r.timestamp);
+                html += `<div class="user-card"><div class="user-card-header"><div class="user-info-left"><div class="user-name">${data.applicant}</div><span class="user-category category-tag ${catCls}">${r.category} ${period}</span></div><div class="user-date">${r.timestamp}</div></div><div class="user-info-row"><span class="info-label">订单总额:</span><span class="info-value">${total}</span></div><div class="winning-section"><div class="winning-title"><i class="fas fa-trophy"></i> 中奖情况</div>`;
                 Object.entries(data.winnings).forEach(([type, amt]) => { html += `<div class="winning-item"><span class="winning-type">${type}:</span><span class="winning-amount">${Math.trunc(parseFloat(amt||0))}</span></div>`; });
                 html += `</div><div class="profit-loss ${cls}"><i class="fas ${icon}"></i> 盈亏: ${profit}</div></div>`;
             });
@@ -1761,6 +1774,7 @@ document.addEventListener("keydown", e => {
             });
         }
         
+        // 更新汇总显示（添加期数显示）
         function updateSummaryDisplay() {
             const container = document.getElementById('summaryContainer');
             const records = getFilteredRecords();
@@ -1779,7 +1793,10 @@ document.addEventListener("keydown", e => {
                 });
                 const cls = totalProfit >= 0 ? 'summary-profit-positive' : 'summary-profit-negative';
                 const sign = totalProfit >= 0 ? '+' : '';
-                html += `<div class="summary-card"><div class="summary-header"><i class="${cat.icon}" style="color:${cat.color};"></i><div class="summary-title">${cat.name}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${cls}">${sign}${totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
+                // 获取当前日期筛选器的期数（用于显示在标题上）
+                const currentDate = document.getElementById('dateFilter').value || getChinaToday();
+                const currentPeriod = getPeriodFromDate(currentDate);
+                html += `<div class="summary-card"><div class="summary-header"><i class="${cat.icon}" style="color:${cat.color};"></i><div class="summary-title">${cat.name} - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${cls}">${sign}${totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
                 if (Object.keys(winnings).length > 0) { Object.entries(winnings).forEach(([t, a]) => { const aCls = a >= 0 ? 'positive' : 'negative'; const aSign = a >= 0 ? '+' : ''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
                 html += `</div></div>`;
             });
@@ -1787,6 +1804,7 @@ document.addEventListener("keydown", e => {
             container.innerHTML = html;
         }
         
+        // 更新我的账户卡片（添加期数显示）
         function updateMyAccountCards() {
             const container = document.getElementById('myAccountContainer');
             const records = getFilteredRecords();
@@ -1806,9 +1824,11 @@ document.addEventListener("keydown", e => {
             const myGd = { totalAmount: sumData['粤港下家'].totalAmount - sumData['粤港上家'].totalAmount, totalProfit: sumData['粤港下家'].totalProfit - sumData['粤港上家'].totalProfit, winnings: {} };
             const gdAwards = new Set([...Object.keys(sumData['粤港下家'].winnings), ...Object.keys(sumData['粤港上家'].winnings)]);
             gdAwards.forEach(t => { myGd.winnings[t] = (sumData['粤港下家'].winnings[t] || 0) - (sumData['粤港上家'].winnings[t] || 0); });
-            let html = `<div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#2ecc71;"></i><div class="summary-title">我的澳门</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myMacau.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myMacau.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myMacau.totalProfit >=0?'+':''}${myMacau.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
+            const currentDate = document.getElementById('dateFilter').value || getChinaToday();
+            const currentPeriod = getPeriodFromDate(currentDate);
+            let html = `<div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#2ecc71;"></i><div class="summary-title">我的澳门 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myMacau.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myMacau.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myMacau.totalProfit >=0?'+':''}${myMacau.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
             if (Object.keys(myMacau.winnings).length > 0) { Object.entries(myMacau.winnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
-            html += `</div></div><div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#f1c40f;"></i><div class="summary-title">我的粤港</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myGd.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myGd.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myGd.totalProfit >=0?'+':''}${myGd.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
+            html += `</div></div><div class="summary-card"><div class="summary-header"><i class="fas fa-arrow-down" style="color:#f1c40f;"></i><div class="summary-title">我的粤港 - ${currentPeriod}</div></div><table class="summary-table"><tr><th>订单总额</th><td class="summary-value">${myGd.totalAmount}</td></tr><tr><th>盈亏总额</th><td class="summary-value ${myGd.totalProfit >=0?'summary-profit-positive':'summary-profit-negative'}">${myGd.totalProfit >=0?'+':''}${myGd.totalProfit}</td></tr></table><div class="winning-summary"><div class="winning-summary-title"><i class="fas fa-trophy"></i> 中奖情况统计</div>`;
             if (Object.keys(myGd.winnings).length > 0) { Object.entries(myGd.winnings).forEach(([t, a]) => { const aCls = a >=0?'positive':'negative'; const aSign = a >=0?'+':''; html += `<div class="winning-summary-item"><span class="winning-summary-type">${t}:</span><span class="winning-summary-amount ${aCls}">${aSign}${a}</span></div>`; }); } else html += `<div class="winning-summary-item"><span class="winning-summary-type">无中奖记录</span></div>`;
             html += `</div></div>`;
             container.innerHTML = html;
