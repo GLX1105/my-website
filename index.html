@@ -32,7 +32,14 @@ setInterval(() => {
 // ==============================================
 // 3. 禁止右键、禁止F12、禁止查看源码
 // ==============================================
-document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("contextmenu", e => {
+  const activeElement = document.activeElement;
+  const isInputElement = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+  if (isInputElement) {
+    return; // 输入框用浏览器默认右键菜单
+  }
+  e.preventDefault();
+});
 document.addEventListener("keydown", e => {
   if (
     e.key === "F12" ||
@@ -211,7 +218,7 @@ document.addEventListener("keydown", e => {
             white-space: nowrap;
         }
         .tag-input-inline .tag-input {
-            width: 130px;
+            width: 65px;
             padding: 5px 8px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
@@ -322,7 +329,7 @@ document.addEventListener("keydown", e => {
         .section-title i { color: #3498db; font-size: 1rem; }
         .input-group { margin-bottom: 15px; }
         .input-with-categories { display: flex; gap: 15px; align-items: flex-start; }
-        #orderData { width: 65%; height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; resize: vertical; transition: border-color 0.3s; color: #333; }
+        #orderData { width: 65%; height: 176px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; resize: vertical; transition: border-color 0.3s; color: #333; }
         #orderData:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.2); }
         .category-button-group { display: flex; flex-direction: column; gap: 8px; width: 35%; min-width: 180px; }
         .category-btn { padding: 8px 12px; border: 2px solid #ddd; border-radius: 6px; background: white; color: #555; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 4px; justify-content: center; }
@@ -355,7 +362,7 @@ document.addEventListener("keydown", e => {
         .history-content { font-size: 0.85rem; line-height: 1.5; min-width: 0; }
         .compensation-card { background: white; border-radius: 6px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); padding: 10px; margin-top: 8px; border: 1px solid #e1e8f0; }
         .compensation-header { background: #f1f6fd; color: #2c3e50; padding: 6px 8px; font-weight: 600; border-bottom: 1px solid #e1e8f0; font-size: 0.85rem; border-radius: 4px 4px 0 0; }
-        .compensation-content { padding: 8px; font-family: monospace; white-space: pre-wrap; word-break: break-word; line-height: 1.4; font-size: 0.8rem; font-weight: 700; color: #2c3e50; }
+        .compensation-content { padding: 8px; font-family: monospace; white-space: pre-wrap; word-break: break-word; line-height: 1.4; font-size: 1rem; font-weight: 700; color: #2c3e50; }
         .compensation-amount { color: #e74c3c; font-weight: bold; }
         .profit-positive { color: #27ae60; font-weight: bold; }
         .profit-negative { color: #e74c3c; font-weight: bold; }
@@ -930,7 +937,7 @@ document.addEventListener("keydown", e => {
         }
         
         // ==============================================
-        // 自定义右键菜单（复制/粘贴）- 整个网页通用，支持从外部粘贴
+        // 自定义右键菜单（复制）- 非输入框区域使用
         // ==============================================
         let currentContextMenu = null;
         
@@ -969,54 +976,6 @@ document.addEventListener("keydown", e => {
             };
             menu.appendChild(copyItem);
             
-            const pasteItem = document.createElement('div');
-            pasteItem.className = 'custom-context-menu-item';
-            pasteItem.innerHTML = '<i class="fas fa-paste"></i> 粘贴';
-            pasteItem.onclick = async () => {
-                const activeElement = document.activeElement;
-                const isInputElement = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
-                
-                if (isInputElement) {
-                    try {
-                        const text = await navigator.clipboard.readText();
-                        if (text) {
-                            const start = activeElement.selectionStart;
-                            const end = activeElement.selectionEnd;
-                            const value = activeElement.value;
-                            const newValue = value.substring(0, start) + text + value.substring(end);
-                            activeElement.value = newValue;
-                            activeElement.dispatchEvent(new Event('input', { bubbles: true }));
-                            activeElement.selectionStart = activeElement.selectionEnd = start + text.length;
-                            activeElement.focus();
-                            showToast('已粘贴', 'success');
-                        } else {
-                            showToast('剪贴板为空', 'warning');
-                        }
-                    } catch (err) {
-                        console.error('粘贴失败:', err);
-                        if (err.name === 'NotAllowedError') {
-                            showToast('请使用 Ctrl+V 粘贴（浏览器权限限制）', 'warning');
-                        } else {
-                            try {
-                                activeElement.focus();
-                                const success = document.execCommand('paste');
-                                if (success) {
-                                    showToast('已粘贴', 'success');
-                                } else {
-                                    showToast('粘贴失败，请使用 Ctrl+V', 'error');
-                                }
-                            } catch (e) {
-                                showToast('粘贴失败，请使用 Ctrl+V', 'error');
-                            }
-                        }
-                    }
-                } else {
-                    showToast('请先点击输入框，再使用粘贴功能', 'warning');
-                }
-                hideContextMenu();
-            };
-            menu.appendChild(pasteItem);
-            
             document.body.appendChild(menu);
             currentContextMenu = menu;
             
@@ -1033,6 +992,11 @@ document.addEventListener("keydown", e => {
         }
         
         document.addEventListener('contextmenu', function(e) {
+            const activeElement = document.activeElement;
+            const isInputElement = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+            if (isInputElement) {
+                return; // 输入框用浏览器默认右键菜单
+            }
             e.preventDefault();
             showContextMenu(e.pageX, e.pageY);
         });
@@ -1246,6 +1210,10 @@ document.addEventListener("keydown", e => {
                 document.getElementById('mainContainer').style.display = 'none';
                 document.getElementById('mainNavbar').style.display = 'none';
                 document.body.style.display = 'block';
+                // 自动聚焦密码输入框
+                setTimeout(() => {
+                    document.getElementById('accessPassword').focus();
+                }, 100);
                 autoBackup = new AutoBackup();
                 performanceMonitor = new PerformanceMonitor();
                 document.getElementById('orderData').addEventListener('keydown', (e) => {
