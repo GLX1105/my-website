@@ -39,7 +39,7 @@ document.addEventListener("keydown", e => {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #1a2a6c, #2c3e50); color: #333; min-height: 100vh; padding: 0; display: block; }
+        body { background: #e8ecf1; color: #333; min-height: 100vh; padding: 0; display: block; }
         .container { max-width: 100%; width: 100%; margin: 0 auto; display: flex; gap: 15px; padding: 0 8px; }
         .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 10000; }
         .login-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); text-align: center; width: 350px; }
@@ -49,11 +49,11 @@ document.addEventListener("keydown", e => {
         .login-btn:hover { background: linear-gradient(to right, #2980b9, #2573a7); transform: translateY(-2px); }
         .login-error { color: #e74c3c; margin-top: 10px; display: none; }
         .main-content { flex: 7; min-width: 0; padding-left: 0; }
-        .user-sidebar { flex: 3; background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; margin-right: 0; min-width: 0; }
-        .big-user-card { background: white; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); overflow: hidden; margin-bottom: 15px; width: 100%; }
+        .user-sidebar { flex: 3; background: rgba(255,255,255,0.6); border-radius: 10px; padding: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0; margin-right: 0; min-width: 0; }
+        .big-user-card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 15px; width: 100%; }
         .big-card-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 10px 14px; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .big-card-content { padding: 12px; max-height: none; overflow-y: visible; }
-        .filter-card { background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-left: 3px solid #667eea; }
+        .filter-card { background: #fff; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 3px solid #667eea; }
         .filter-card .base-date-info { font-size: 0.75rem; color: #7f8c8d; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
         .filter-card .base-date-info strong { color: #3498db; }
         .filter-card .days-input-wrapper { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -77,19 +77,18 @@ document.addEventListener("keydown", e => {
         .tag-input-inline label { font-size: 0.8rem; color: #666; font-weight: 500; margin: 0; white-space: nowrap; }
         .tag-input-inline .tag-input { width: 65px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.85rem; height: 30px; background: white; }
         .tag-input-inline .tag-input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.15); }
-        .navbar { background: linear-gradient(135deg, #0f1f3d 0%, #1a3a6c 30%, #1e4d8c 60%, #1a3a6c 100%); color: white; padding: 10px 20px; margin: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 100; }
-        .navbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #3498db, #667eea, #e74c3c, #667eea, #3498db); opacity: 0.6; }
+        .navbar { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 10px 20px; margin: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); position: relative; z-index: 100; }
         .navbar-brand { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px; }
-        .navbar-brand i { font-size: 1.3rem; color: #3498db; filter: drop-shadow(0 0 4px rgba(52,152,219,0.5)); }
+        .navbar-brand i { font-size: 1.3rem; color: #3498db; }
         .nav-buttons { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .nav-btn { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.15); padding: 7px 14px; font-size: 0.8rem; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(5px); white-space: nowrap; }
+        .nav-btn { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.2); padding: 7px 14px; font-size: 0.8rem; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
         .nav-btn i { font-size: 0.85rem; transition: transform 0.25s ease; }
-        .nav-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.35); color: #fff; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(52,152,219,0.3); }
+        .nav-btn:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.4); color: #fff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .nav-btn:hover i { transform: scale(1.15); }
-        .nav-btn:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(52,152,219,0.2); }
+        .nav-btn:active { transform: translateY(0); }
         .recycle-bin-btn { position: relative; }
-        .recycle-badge { position: absolute; top: -6px; right: -6px; background: #e74c3c; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid #0f1f3d; box-shadow: 0 2px 6px rgba(231,76,60,0.4); }
-        .input-section { background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 20px; margin-top: 10px; margin-bottom: 15px; }
+        .recycle-badge { position: absolute; top: -6px; right: -6px; background: #e74c3c; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid #2c3e50; box-shadow: 0 2px 6px rgba(231,76,60,0.4); }
+        .input-section { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 20px; margin-top: 10px; margin-bottom: 15px; }
         .section-title { font-size: 1.1rem; color: #2c3e50; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #3498db; display: flex; align-items: center; gap: 8px; }
         .section-title i { color: #3498db; font-size: 1rem; }
         .input-group { margin-bottom: 15px; }
@@ -114,18 +113,18 @@ document.addEventListener("keydown", e => {
         .message { padding: 10px; border-radius: 6px; margin: 12px 0; text-align: center; font-weight: 500; display: none; font-size: 0.9rem; }
         .success { background: rgba(46,204,113,0.15); color: #27ae60; border: 1px solid #2ecc71; }
         .error { background: rgba(231,76,60,0.15); color: #c0392b; border: 1px solid #e74c3c; }
-        .history-section { background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 18px; margin-top: 15px; }
+        .history-section { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 18px; margin-top: 15px; }
         .history-controls { display: flex; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; align-items: center; }
         .history-container { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
-        .history-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; transition: transform 0.2s ease; width: 100%; position: relative; }
-        .history-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .history-header { background: linear-gradient(90deg, #1a3a6c, #2c5aa0); color: white; padding: 10px 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+        .history-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); overflow: hidden; transition: transform 0.2s ease; width: 100%; position: relative; }
+        .history-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+        .history-header { background: #2c3e50; color: white; padding: 10px 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
         .history-time { font-size: 0.75rem; opacity: 0.85; }
         .delete-btn { background: rgba(231,76,60,0.3); color: white; border: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
         .delete-btn:hover { background: rgba(231,76,60,0.8); transform: scale(1.1); }
         .history-body { padding: 12px; }
         .history-content { font-size: 0.85rem; line-height: 1.5; min-width: 0; }
-        .compensation-card { background: white; border-radius: 6px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); padding: 10px; margin-top: 8px; border: 1px solid #e1e8f0; }
+        .compensation-card { background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 10px; margin-top: 8px; border: 1px solid #e1e8f0; }
         .compensation-header { background: #f1f6fd; color: #2c3e50; padding: 6px 8px; font-weight: 600; border-bottom: 1px solid #e1e8f0; font-size: 0.85rem; border-radius: 4px 4px 0 0; }
         .compensation-content { padding: 8px; font-family: monospace; white-space: pre-wrap; word-break: break-word; line-height: 1.4; font-size: 1rem; font-weight: 700; color: #2c3e50; }
         .compensation-amount { color: #e74c3c; font-weight: bold; }
@@ -134,9 +133,9 @@ document.addEventListener("keydown", e => {
         .profit-tag { font-weight: bold; margin-left: 15px; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
         .pay-me { background-color: rgba(46,204,113,0.2); color: #27ae60; }
         .pay-you { background-color: rgba(231,76,60,0.2); color: #c0392b; }
-        .user-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 12px; margin-bottom: 12px; border: 1px solid #e1e8f0; transition: all 0.3s ease; width: calc(33.333% - 10px); min-width: 0; display: flex; flex-direction: column; }
+        .user-card { background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); padding: 12px; margin-bottom: 12px; border: 1px solid #eef0f2; transition: all 0.3s ease; width: calc(33.333% - 10px); min-width: 0; display: flex; flex-direction: column; }
         .user-card:last-child { margin-bottom: 0; }
-        .user-card:hover { transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+        .user-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
         .user-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.85rem; }
         .user-card-name { font-weight: 600; color: #2c3e50; font-size: 0.95rem; }
         .user-card-period { font-weight: 600; color: #2980b9; font-size: 0.85rem; }
@@ -195,7 +194,7 @@ document.addEventListener("keydown", e => {
         .status-duplicate { background: rgba(231,76,60,0.2); color: #c0392b; }
         .import-preview-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
         .summary-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .summary-card { background: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 12px; border: 1px solid #e1e8f0; display: flex; flex-direction: column; }
+        .summary-card { background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); padding: 12px; border: 1px solid #eef0f2; display: flex; flex-direction: column; }
         .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
         .summary-title { font-weight: 600; color: #2c3e50; font-size: 1rem; }
         .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -215,9 +214,7 @@ document.addEventListener("keydown", e => {
         .summary-profit-value { font-weight: 600; font-size: 0.9rem; }
         #userCardsContainer { display: flex; flex-wrap: wrap; gap: 15px; align-items: stretch; }
         .my-account-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .history-date-selector { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.9); padding: 6px 12px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .history-date-input { background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 8px; font-size: 0.85rem; color: #333; cursor: pointer; }
-        .history-user-selector { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.9); padding: 6px 12px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .history-user-selector { display: flex; align-items: center; gap: 8px; background: #f8f9fa; padding: 6px 12px; border-radius: 6px; }
         .history-user-select { background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 8px; font-size: 0.85rem; color: #333; cursor: pointer; min-width: 120px; }
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; }
         .toast { background: white; color: #2c3e50; padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; transform: translateX(120%); transition: transform 0.3s ease; }
@@ -254,7 +251,7 @@ document.addEventListener("keydown", e => {
         .password-cancel { background: #95a5a6; }
         .password-cancel:hover { background: #7f8c8d; }
         .password-error { color: #e74c3c; margin-top: 10px; display: none; }
-        .storage-indicator { position: fixed; bottom: 20px; right: 20px; background: transparent; color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 0.82rem; z-index: 1000; min-width: 160px; }
+        .storage-indicator { position: fixed; bottom: 20px; right: 20px; background: transparent; color: #2c3e50; padding: 10px 14px; border-radius: 6px; font-size: 0.82rem; z-index: 1000; min-width: 160px; }
         .storage-row { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; }
         .storage-label { color: #333; }
         .storage-value { color: #e74c3c; font-weight: 600; text-align: right; }
@@ -267,11 +264,7 @@ document.addEventListener("keydown", e => {
             .recycle-panel { width: 100%; right: -100%; }
             .history-controls { flex-direction: column; align-items: flex-start; }
             .history-user-selector { margin-left: 0; margin-top: 10px; width: 100%; }
-            .dynamic-table th, .dynamic-table td {
-                padding: 3px 2px;
-                font-size: 0.75rem;
-                white-space: nowrap;
-            }
+            .dynamic-table th, .dynamic-table td { padding: 3px 2px; font-size: 0.75rem; white-space: nowrap; }
             .serial-number { font-size: 0.65rem; }
             .order-amount { font-size: 0.8rem; }
         }
