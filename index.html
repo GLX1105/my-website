@@ -261,8 +261,20 @@ document.addEventListener("keydown", e => {
         @media (max-width: 1400px) { .container { flex-direction: column; } .user-sidebar { width: 100%; flex: none; } }
         @media (max-width: 1200px) { .summary-container, .my-account-container { grid-template-columns: repeat(2, 1fr); } .user-card { width: calc(50% - 8px); } }
         @media (max-width: 992px) { .input-with-categories { flex-direction: column; } #orderData, .category-button-group { width: 100%; } .category-button-group { flex-direction: row; flex-wrap: wrap; } .category-btn { flex: 1; min-width: 120px; } }
-        @media (max-width: 768px) { .btn-group, .navbar, .history-container, .summary-container, .my-account-container { flex-direction: column; } .user-card { width: 100%; } .recycle-panel { width: 100%; right: -100%; } }
-        @media (max-width: 768px) { .history-controls { flex-direction: column; align-items: flex-start; } .history-user-selector { margin-left: 0; margin-top: 10px; width: 100%; } }
+        @media (max-width: 768px) {
+            .btn-group, .navbar, .history-container, .summary-container, .my-account-container { flex-direction: column; }
+            .user-card { width: 100%; }
+            .recycle-panel { width: 100%; right: -100%; }
+            .history-controls { flex-direction: column; align-items: flex-start; }
+            .history-user-selector { margin-left: 0; margin-top: 10px; width: 100%; }
+            .dynamic-table th, .dynamic-table td {
+                padding: 3px 2px;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+            .serial-number { font-size: 0.65rem; }
+            .order-amount { font-size: 0.8rem; }
+        }
         .format-selector { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 3000; }
         .format-content { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); text-align: center; width: 350px; }
         .format-content h3 { color: #2c3e50; margin-bottom: 20px; }
