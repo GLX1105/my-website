@@ -268,8 +268,8 @@ document.addEventListener("keydown", e => {
             .serial-number { font-size: 0.65rem; }
             .order-amount { font-size: 0.8rem; }
             .payment-dialog { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; min-width: 100% !important; min-height: 100% !important; border-radius: 0; }
-            .payment-dialog-body { flex-direction: row; overflow-x: auto; min-width: 1000px; }
-            .payment-table-container-left, .payment-table-container-right { flex: 1; min-width: 480px; overflow-x: visible; }
+            .payment-dialog-body { padding: 5px; }
+            .merged-table-wrapper { display: flex; flex-direction: row; gap: 20px; overflow: auto; }
             .resize-handle { display: none; }
             .payment-dialog-header { cursor: default; }
         }
@@ -296,23 +296,19 @@ document.addEventListener("keydown", e => {
         .payment-dialog-actions { display: flex; gap: 8px; }
         .payment-dialog-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
         .payment-dialog-btn:hover { background: rgba(255,255,255,0.4); }
-        .payment-dialog-body { flex: 1; overflow: hidden; display: flex; flex-direction: row; gap: 10px; padding: 10px; }
-        .payment-table-container { flex: 1; overflow: auto; display: flex; flex-direction: column; }
-        .payment-table-container h4 { margin-bottom: 5px; font-size: 0.9rem; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
-        .payment-table { border-collapse: collapse; font-size: 0.8rem; table-layout: auto; width: 100%; }
+        .payment-dialog-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 10px; }
+        .merged-table-wrapper { flex: 1; display: flex; flex-direction: row; gap: 20px; overflow: auto; }
+        .payment-table { border-collapse: collapse; font-size: 0.8rem; table-layout: auto; }
         .payment-table th, .payment-table td { border: 1px solid #d1d5db; padding: 2px 4px; text-align: center; white-space: nowrap; }
-        .payment-table th { background: #f1f6fd; font-weight: 600; color: #2c3e50; position: sticky; top: 0; }
+        .payment-table th { background: #f1f6fd; font-weight: 600; color: #2c3e50; position: sticky; top: 0; z-index: 2; }
         .payment-table input { border: none; background: transparent; text-align: center; font-size: 0.8rem; padding: 2px; outline: none; min-width: 0; width: 100%; }
-        .payment-table input:focus { background: #eef2ff; border-radius: 2px; }
-        .payment-table .col-receive-pay-display { cursor: pointer; min-height: 20px; }
-        .payment-table-container-left { flex: 1 1 auto; }
-        .payment-table-container-right { flex: 0 0 auto; width: auto; }
+        .payment-table input:focus { background: transparent !important; }
+        .payment-table .col-receive-pay-display { cursor: pointer; min-height: 20px; white-space: normal; word-break: break-all; overflow-wrap: break-word; }
         .payment-table1 .col-receive-pay { min-width: 250px; color: #3498db; font-weight: normal; }
         .payment-table1 .col-profit, .payment-table1 .col-total, .payment-table1 .col-balance, .payment-table1 .col-accumulate { font-weight: bold; }
         .payment-table2 .col-profit-auto { font-weight: bold; }
         .payment-table1 th.col-receive-pay { color: #000; font-weight: bold; }
-        .payment-table1 th:not(.col-receive-pay), .payment-table1 td:not(.col-receive-pay),
-        .payment-table2 th, .payment-table2 td { width: 70px; }
+        .section-title-row th { background: #e8f0fe; font-weight: 700; text-align: left; padding: 6px 8px; }
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, #ccc 50%); }
         .payment-dialog.fullscreen { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; min-width: 100% !important; min-height: 100% !important; border-radius: 0; }
         .profit-color-positive { color: #27ae60; }
@@ -379,24 +375,15 @@ document.addEventListener("keydown", e => {
         </div>
     </div>
     <div class="payment-dialog-body" id="paymentDialogBody">
-        <div class="payment-table-container payment-table-container-left">
-            <h4>收付明细表
-                <button class="btn-small" id="btnEditTable1" onclick="setTable1Editable()">修改</button>
-                <button class="btn-small" id="btnSaveTable1" onclick="saveTable1Data()">保存</button>
-            </h4>
+        <div class="merged-table-wrapper" id="mergedTableWrapper">
             <table class="payment-table payment-table1" id="paymentTable1">
-                <thead><tr><th>序号</th><th>昵称</th><th>盈亏</th><th>累计</th><th class="col-receive-pay">收付</th><th>收付合计</th><th>结余</th></tr></thead>
-                <tbody id="paymentTable1Body"></tbody>
+                <thead id="table1Head"></thead>
+                <tbody id="table1Body"></tbody>
             </table>
-        </div>
-        <div class="payment-table-container payment-table-container-right">
-            <h4>用户盈亏明细
-                <button class="btn-small" id="btnEditTable2" onclick="setTable2Editable()">修改</button>
-                <button class="btn-small" id="btnSaveTable2" onclick="saveTable2Data()">保存</button>
-            </h4>
+            <div style="width: 20px; flex-shrink: 0;"></div>
             <table class="payment-table payment-table2" id="paymentTable2">
-                <thead><tr><th>编号</th><th>昵称</th><th>备注</th><th>用户</th><th>盈亏</th></tr></thead>
-                <tbody id="paymentTable2Body"></tbody>
+                <thead id="table2Head"></thead>
+                <tbody id="table2Body"></tbody>
             </table>
         </div>
     </div>
@@ -900,16 +887,71 @@ document.getElementById('operationPassword').addEventListener('keypress', (e) =>
 /* ========== 收付弹窗功能 ========== */
 let paymentTable1Data = [];
 let paymentTable2Rows = JSON.parse(localStorage.getItem('paymentTable2Data') || '[]');
+let globalAccumulate = JSON.parse(localStorage.getItem('paymentTable1AccumulateGlobal') || '[]');
 function getCurrentDate() { return document.getElementById('dateFilter').value || getChinaToday(); }
-function loadTable1Data() { const key = 'paymentTable1Data_' + getCurrentDate(); paymentTable1Data = JSON.parse(localStorage.getItem(key) || '[]'); }
-function saveTable1DataToStorage() { const key = 'paymentTable1Data_' + getCurrentDate(); localStorage.setItem(key, JSON.stringify(paymentTable1Data)); }
-function getAllTable1Data() { const result = {}; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('paymentTable1Data_')) { const date = key.substring('paymentTable1Data_'.length); result[date] = JSON.parse(localStorage.getItem(key) || '[]'); } } return result; }
-function setAllTable1Data(dataObj) { for (let i = localStorage.length - 1; i >= 0; i--) { const key = localStorage.key(i); if (key.startsWith('paymentTable1Data_')) localStorage.removeItem(key); } for (const [date, data] of Object.entries(dataObj)) localStorage.setItem('paymentTable1Data_' + date, JSON.stringify(data)); }
+function loadTable1Data() {
+    const key = 'paymentTable1Data_' + getCurrentDate();
+    paymentTable1Data = JSON.parse(localStorage.getItem(key) || '[]');
+    // 合并全局累计列
+    paymentTable1Data = paymentTable1Data.map((row, i) => {
+        const acc = globalAccumulate.find(a => a.index === i);
+        if (acc) row.accumulate = acc.accumulate;
+        return row;
+    });
+}
+function saveTable1DataToStorage() {
+    const key = 'paymentTable1Data_' + getCurrentDate();
+    localStorage.setItem(key, JSON.stringify(paymentTable1Data.map(row => {
+        const { accumulate, ...rest } = row; // 移除accumulate，单独存储
+        return rest;
+    })));
+    // 保存全局累计列
+    const accData = paymentTable1Data.map(row => ({ index: row.index, accumulate: row.accumulate || '' }));
+    localStorage.setItem('paymentTable1AccumulateGlobal', JSON.stringify(accData));
+    globalAccumulate = accData;
+}
+function getAllTable1Data() {
+    const result = {};
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('paymentTable1Data_')) {
+            const date = key.substring('paymentTable1Data_'.length);
+            result[date] = JSON.parse(localStorage.getItem(key) || '[]');
+        }
+    }
+    return result;
+}
+function setAllTable1Data(dataObj) {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key.startsWith('paymentTable1Data_')) localStorage.removeItem(key);
+    }
+    for (const [date, data] of Object.entries(dataObj)) {
+        localStorage.setItem('paymentTable1Data_' + date, JSON.stringify(data));
+    }
+}
 function loadTable2RowsData() { paymentTable2Rows = JSON.parse(localStorage.getItem('paymentTable2Data') || '[]'); }
-function saveTable2RowsData() { const rows = document.querySelectorAll('#paymentTable2 tbody tr'); const data = Array.from(rows).map((row, i) => { const no = row.querySelector('.col-no')?.value || ''; const nick = row.querySelector('.col-nick')?.value || ''; const remark = row.querySelector('.col-remark')?.value || ''; const locked = row.querySelector('.col-no')?.hasAttribute('readonly') || false; return { index: i, no, nick, remark, locked }; }); localStorage.setItem('paymentTable2Data', JSON.stringify(data)); paymentTable2Rows = data; }
+function saveTable2RowsData() {
+    const rows = document.querySelectorAll('#table2Body tr');
+    const data = Array.from(rows).map((row, i) => {
+        const no = row.querySelector('.col-no')?.value || '';
+        const nick = row.querySelector('.col-nick')?.value || '';
+        const remark = row.querySelector('.col-remark')?.value || '';
+        const locked = row.querySelector('.col-no')?.hasAttribute('readonly') || false;
+        return { index: i, no, nick, remark, locked };
+    });
+    localStorage.setItem('paymentTable2Data', JSON.stringify(data));
+    paymentTable2Rows = data;
+}
 function openPaymentDialog() { const dialog = document.getElementById('paymentDialog'); dialog.classList.add('active'); initPaymentTables(); updateTableButtons(); }
 function closePaymentDialog() { document.getElementById('paymentDialog').classList.remove('active'); }
-function toggleFullscreenPayment() { const dialog = document.getElementById('paymentDialog'); dialog.classList.toggle('fullscreen'); const icon = dialog.querySelector('.payment-dialog-header .payment-dialog-actions .fa-expand, .payment-dialog-header .payment-dialog-actions .fa-compress'); if (dialog.classList.contains('fullscreen')) { icon.classList.remove('fa-expand'); icon.classList.add('fa-compress'); } else { icon.classList.remove('fa-compress'); icon.classList.add('fa-expand'); } }
+function toggleFullscreenPayment() {
+    const dialog = document.getElementById('paymentDialog');
+    dialog.classList.toggle('fullscreen');
+    const icon = dialog.querySelector('.payment-dialog-header .payment-dialog-actions .fa-expand, .payment-dialog-header .payment-dialog-actions .fa-compress');
+    if (dialog.classList.contains('fullscreen')) { icon.classList.remove('fa-expand'); icon.classList.add('fa-compress'); }
+    else { icon.classList.remove('fa-compress'); icon.classList.add('fa-expand'); }
+}
 let isDragging = false, dragStartX, dragStartY, initialLeft, initialTop;
 const dialogElement = document.getElementById('paymentDialog');
 const headerElement = document.getElementById('paymentDialogHeader');
@@ -924,7 +966,18 @@ document.addEventListener('mouseup', () => { isResizing = false; });
 function initPaymentTables() {
     loadTable1Data();
     loadTable2RowsData();
-    const table1Body = document.getElementById('paymentTable1Body');
+    const head1 = document.getElementById('table1Head');
+    const body1 = document.getElementById('table1Body');
+    const head2 = document.getElementById('table2Head');
+    const body2 = document.getElementById('table2Body');
+    const records = getFilteredRecords();
+    const matchedUsers = new Set();
+    paymentTable2Rows.forEach(r => { if (r.remark && records.find(rec => rec.applicant === r.remark.trim())) matchedUsers.add(r.remark.trim()); });
+    const remainingUsers = records.filter(r => !matchedUsers.has(r.applicant));
+
+    // 表格1
+    head1.innerHTML = `<tr class="section-title-row"><th colspan="7">收付明细表 <button class="btn-small" id="btnEditTable1" onclick="setTable1Editable()">修改</button> <button class="btn-small" id="btnSaveTable1" onclick="saveTable1Data()">保存</button></th></tr>
+        <tr><th>序号</th><th>昵称</th><th>盈亏</th><th>累计</th><th class="col-receive-pay">收付</th><th>收付合计</th><th>结余</th></tr>`;
     let html1 = '';
     for (let i = 0; i < 118; i++) {
         const saved = paymentTable1Data.find(r => r.index === i) || {};
@@ -941,12 +994,11 @@ function initPaymentTables() {
             <td><input type="text" class="col-balance" value="" readonly></td>
         </tr>`;
     }
-    table1Body.innerHTML = html1;
-    const table2Body = document.getElementById('paymentTable2Body');
-    const records = getFilteredRecords();
-    const matchedUsers = new Set();
-    paymentTable2Rows.forEach(r => { if (r.remark && records.find(rec => rec.applicant === r.remark.trim())) matchedUsers.add(r.remark.trim()); });
-    const remainingUsers = records.filter(r => !matchedUsers.has(r.applicant));
+    body1.innerHTML = html1;
+
+    // 表格2
+    head2.innerHTML = `<tr class="section-title-row"><th colspan="5">用户盈亏明细 <button class="btn-small" id="btnEditTable2" onclick="setTable2Editable()">修改</button> <button class="btn-small" id="btnSaveTable2" onclick="saveTable2Data()">保存</button></th></tr>
+        <tr><th>编号</th><th>昵称</th><th>备注</th><th>用户</th><th>盈亏</th></tr>`;
     let html2 = '';
     let remainingIdx = 0;
     for (let i = 0; i < 118; i++) {
@@ -975,17 +1027,16 @@ function initPaymentTables() {
             <td class="col-profit-auto">${profit !== '' ? '<span class="' + (profit >= 0 ? 'profit-color-positive' : 'profit-color-negative') + '">' + profit + '</span>' : ''}</td>
         </tr>`;
     }
-    table2Body.innerHTML = html2;
+    body2.innerHTML = html2;
+
     refreshTable1ProfitFromTable2();
-    document.querySelectorAll('#paymentTable1 tbody tr').forEach(row => updateRowCalculations(row));
-    document.querySelectorAll('#paymentTable1 .col-profit, #paymentTable1 .col-accumulate').forEach(inp => updateProfitColor(inp));
+    document.querySelectorAll('#table1Body tr').forEach(row => updateRowCalculations(row));
+    document.querySelectorAll('#table1Body .col-profit, #table1Body .col-accumulate').forEach(inp => updateProfitColor(inp));
     updateTableButtons();
 }
 function refreshTable1ProfitFromTable2() {
-    const rows1 = document.querySelectorAll('#paymentTable1 tbody tr');
-    const table2 = document.getElementById('paymentTable2');
-    if (!table2) return;
-    const rows2 = table2.querySelectorAll('tbody tr');
+    const rows1 = document.querySelectorAll('#table1Body tr');
+    const rows2 = document.querySelectorAll('#table2Body tr');
     rows1.forEach(row1 => {
         const idxInput = row1.querySelector('.col-index');
         if (!idxInput) return;
@@ -1009,7 +1060,7 @@ function refreshTable1ProfitFromTable2() {
     });
 }
 function refreshTable2UserData() {
-    const rows = document.querySelectorAll('#paymentTable2 tbody tr');
+    const rows = document.querySelectorAll('#table2Body tr');
     const records = getFilteredRecords();
     const matchedUsers = new Set();
     rows.forEach(row => { const remark = row.querySelector('.col-remark')?.value.trim() || ''; if (remark && records.find(r => r.applicant === remark)) matchedUsers.add(remark); });
@@ -1053,6 +1104,8 @@ function editReceivePay(div) {
     input.value = raw;
     input.className = 'col-receive-pay';
     input.style.width = '100%';
+    input.style.height = '20px';
+    input.style.lineHeight = '20px';
     input.addEventListener('blur', function() {
         const newRaw = this.value;
         const displayDiv = document.createElement('div');
@@ -1060,6 +1113,8 @@ function editReceivePay(div) {
         displayDiv.setAttribute('data-raw', newRaw);
         displayDiv.innerHTML = formatReceivePay(newRaw);
         displayDiv.onclick = function() { editReceivePay(this); };
+        displayDiv.style.height = '20px';
+        displayDiv.style.lineHeight = '20px';
         this.parentNode.replaceChild(displayDiv, this);
         updateRowCalculations(displayDiv.closest('tr'));
     });
@@ -1112,9 +1167,8 @@ function handleTable1IndexChange(input) {
     nickInput.value = '';
     profitInput.value = '';
     profitInput.classList.remove('profit-color-positive', 'profit-color-negative');
-    if (!val) return;
-    const table2 = document.getElementById('paymentTable2');
-    const rows2 = table2.querySelectorAll('tbody tr');
+    if (!val) { updateRowCalculations(row); return; }
+    const rows2 = document.querySelectorAll('#table2Body tr');
     for (const r2 of rows2) {
         const noInput = r2.querySelector('.col-no');
         if (noInput && noInput.value.trim() === val) {
@@ -1142,7 +1196,7 @@ function updateProfitColor(input) {
     else if (num < 0) input.classList.add('profit-color-negative');
 }
 function saveTable1Data() {
-    const rows = document.querySelectorAll('#paymentTable1 tbody tr');
+    const rows = document.querySelectorAll('#table1Body tr');
     const data = [];
     let anyFilled = false;
     rows.forEach((row, i) => {
@@ -1166,7 +1220,7 @@ function saveTable1Data() {
     else showToast('收付明细表已保存', 'success');
 }
 function setTable1Editable() {
-    const rows = document.querySelectorAll('#paymentTable1 tbody tr');
+    const rows = document.querySelectorAll('#table1Body tr');
     rows.forEach(row => {
         row.querySelectorAll('input').forEach(inp => { inp.removeAttribute('readonly'); });
         const div = row.querySelector('.col-receive-pay-display');
@@ -1181,7 +1235,7 @@ function onTable2RemarkChange(input) {
     const row = input.closest('tr');
     const remark = input.value.trim();
     const records = getFilteredRecords();
-    const rows = document.querySelectorAll('#paymentTable2 tbody tr');
+    const rows = document.querySelectorAll('#table2Body tr');
     const matchedUsers = new Set();
     rows.forEach(r => { const rem = r.querySelector('.col-remark')?.value.trim() || ''; if (rem && records.find(rec => rec.applicant === rem)) matchedUsers.add(rem); });
     const remainingUsers = records.filter(r => !matchedUsers.has(r.applicant));
@@ -1207,7 +1261,7 @@ function onTable2RemarkChange(input) {
     });
 }
 function saveTable2Data() {
-    const rows = document.querySelectorAll('#paymentTable2 tbody tr');
+    const rows = document.querySelectorAll('#table2Body tr');
     let anyFilled = false;
     rows.forEach(row => {
         const no = row.querySelector('.col-no').value.trim();
@@ -1226,23 +1280,27 @@ function saveTable2Data() {
     else showToast('已保存并锁定有内容的行', 'success');
 }
 function setTable2Editable() {
-    const rows = document.querySelectorAll('#paymentTable2 tbody tr');
+    const rows = document.querySelectorAll('#table2Body tr');
     rows.forEach(row => { row.querySelector('.col-no').removeAttribute('readonly'); row.querySelector('.col-nick').removeAttribute('readonly'); row.querySelector('.col-remark').removeAttribute('readonly'); });
     paymentTable2Rows = paymentTable2Rows.map(r => ({ ...r, locked: false }));
     saveTable2RowsData();
     updateTableButtons();
 }
 function updateTableButtons() {
-    const anyLocked1 = document.querySelector('#paymentTable1 tbody input[readonly]') !== null;
-    document.getElementById('btnEditTable1').style.display = anyLocked1 ? 'inline-block' : 'none';
-    document.getElementById('btnSaveTable1').style.display = 'inline-block';
-    const anyLocked2 = document.querySelector('#paymentTable2 tbody input[readonly]') !== null;
-    document.getElementById('btnEditTable2').style.display = anyLocked2 ? 'inline-block' : 'none';
-    document.getElementById('btnSaveTable2').style.display = 'inline-block';
+    const anyLocked1 = document.querySelector('#table1Body input[readonly]') !== null;
+    const btnEdit1 = document.getElementById('btnEditTable1');
+    const btnSave1 = document.getElementById('btnSaveTable1');
+    if (btnEdit1) btnEdit1.style.display = anyLocked1 ? 'inline-block' : 'none';
+    if (btnSave1) btnSave1.style.display = 'inline-block';
+    const anyLocked2 = document.querySelector('#table2Body input[readonly]') !== null;
+    const btnEdit2 = document.getElementById('btnEditTable2');
+    const btnSave2 = document.getElementById('btnSaveTable2');
+    if (btnEdit2) btnEdit2.style.display = anyLocked2 ? 'inline-block' : 'none';
+    if (btnSave2) btnSave2.style.display = 'inline-block';
 }
 function escapeHtml(text) { const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}; return String(text).replace(/[&<>"']/g, m => map[m]); }
 function getPaymentData() {
-    const table1Rows = document.querySelectorAll('#paymentTable1 tbody tr');
+    const table1Rows = document.querySelectorAll('#table1Body tr');
     const table1Data = Array.from(table1Rows).map(row => ({
         indexVal: row.querySelector('.col-index')?.value || '',
         nick: row.querySelector('.col-nick')?.value || '',
