@@ -902,10 +902,9 @@ function loadTable1Data() {
 function saveTable1DataToStorage() {
     const key = 'paymentTable1Data_' + getCurrentDate();
     localStorage.setItem(key, JSON.stringify(paymentTable1Data.map(row => {
-        const { accumulate, ...rest } = row; // 移除accumulate，单独存储
+        const { accumulate, ...rest } = row;
         return rest;
     })));
-    // 保存全局累计列
     const accData = paymentTable1Data.map(row => ({ index: row.index, accumulate: row.accumulate || '' }));
     localStorage.setItem('paymentTable1AccumulateGlobal', JSON.stringify(accData));
     globalAccumulate = accData;
@@ -966,6 +965,7 @@ document.addEventListener('mouseup', () => { isResizing = false; });
 function initPaymentTables() {
     loadTable1Data();
     loadTable2RowsData();
+    globalAccumulate = JSON.parse(localStorage.getItem('paymentTable1AccumulateGlobal') || '[]');
     const head1 = document.getElementById('table1Head');
     const body1 = document.getElementById('table1Body');
     const head2 = document.getElementById('table2Head');
@@ -974,7 +974,6 @@ function initPaymentTables() {
     const matchedUsers = new Set();
     paymentTable2Rows.forEach(r => { if (r.remark && records.find(rec => rec.applicant === r.remark.trim())) matchedUsers.add(r.remark.trim()); });
     const remainingUsers = records.filter(r => !matchedUsers.has(r.applicant));
-
     // 表格1
     head1.innerHTML = `<tr class="section-title-row"><th colspan="7">收付明细表 <button class="btn-small" id="btnEditTable1" onclick="setTable1Editable()">修改</button> <button class="btn-small" id="btnSaveTable1" onclick="saveTable1Data()">保存</button></th></tr>
         <tr><th>序号</th><th>昵称</th><th>盈亏</th><th>累计</th><th class="col-receive-pay">收付</th><th>收付合计</th><th>结余</th></tr>`;
@@ -982,11 +981,14 @@ function initPaymentTables() {
     for (let i = 0; i < 118; i++) {
         const saved = paymentTable1Data.find(r => r.index === i) || {};
         const locked = saved.locked || false;
+        // 累计列直接从globalAccumulate读取
+        const accData = globalAccumulate.find(a => a.index === i);
+        const accValue = accData ? accData.accumulate : (saved.accumulate || '');
         html1 += `<tr>
             <td><input type="text" class="col-index" value="${escapeHtml(saved.indexVal || '')}" oninput="handleTable1IndexChange(this)" ${locked ? 'readonly' : ''}></td>
             <td><input type="text" class="col-nick" value="${escapeHtml(saved.nick || '')}" ${locked ? 'readonly' : ''}></td>
             <td><input type="text" class="col-profit" value="" oninput="updateProfitColor(this); updateRowCalculations(this.closest('tr'))" ${locked ? 'readonly' : ''}></td>
-            <td><input type="text" class="col-accumulate" value="${escapeHtml(saved.accumulate || '')}" oninput="updateProfitColor(this)" ${locked ? 'readonly' : ''}></td>
+            <td><input type="text" class="col-accumulate" value="${escapeHtml(accValue)}" oninput="updateProfitColor(this)" ${locked ? 'readonly' : ''}></td>
             <td class="col-receive-pay-cell">
                 <div class="col-receive-pay-display" data-raw="${escapeHtml(saved.receivePay || '')}" ${locked ? '' : 'onclick="editReceivePay(this)"'}>${formatReceivePay(saved.receivePay || '')}</div>
             </td>
@@ -995,7 +997,6 @@ function initPaymentTables() {
         </tr>`;
     }
     body1.innerHTML = html1;
-
     // 表格2
     head2.innerHTML = `<tr class="section-title-row"><th colspan="5">用户盈亏明细 <button class="btn-small" id="btnEditTable2" onclick="setTable2Editable()">修改</button> <button class="btn-small" id="btnSaveTable2" onclick="saveTable2Data()">保存</button></th></tr>
         <tr><th>编号</th><th>昵称</th><th>备注</th><th>用户</th><th>盈亏</th></tr>`;
@@ -1028,7 +1029,6 @@ function initPaymentTables() {
         </tr>`;
     }
     body2.innerHTML = html2;
-
     refreshTable1ProfitFromTable2();
     document.querySelectorAll('#table1Body tr').forEach(row => updateRowCalculations(row));
     document.querySelectorAll('#table1Body .col-profit, #table1Body .col-accumulate').forEach(inp => updateProfitColor(inp));
