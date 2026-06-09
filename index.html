@@ -299,7 +299,7 @@ setInterval(() => {
         .profit-color-negative { color: #e74c3c; }
         .btn-small { padding: 3px 8px; font-size: 0.75rem; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; }
         .btn-small:hover { background: #f0f0f0; }
-        .payment-table2 .col-nick, .payment-table2 .col-user, .payment-table2 .col-profit-auto { width: 70px; }
+        .payment-table2 .col-nick, .payment-table2 .col-remark, .payment-table2 .col-user, .payment-table2 .col-profit-auto { width: 70px; }
     </style>
 </head>
 <body>
@@ -640,8 +640,6 @@ function populateFilterOptions() {
     updateHistoryUserFilter();
 }
 function showToast(msg, type = 'success') { const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'exclamation-triangle'}"></i><span>${msg}</span>`; document.getElementById('toastContainer').appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); toast.remove(); }, 3000); }
-// 自定义确认弹窗
-let confirmCallback = null;
 function showConfirmDialog(message, onConfirm, title = '确认') {
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMessage').textContent = message;
@@ -651,9 +649,7 @@ function showConfirmDialog(message, onConfirm, title = '确认') {
         if (onConfirm) onConfirm();
     };
 }
-function hideConfirmDialog() {
-    document.getElementById('confirmDialog').classList.remove('show');
-}
+function hideConfirmDialog() { document.getElementById('confirmDialog').classList.remove('show'); }
 async function saveRecord() {
     const saveBtn = document.getElementById('saveBtn'); saveBtn.classList.add('loading');
     const orderDataInput = document.getElementById('orderData').value;
@@ -749,7 +745,6 @@ function updateHistoryDisplay() {
     container.innerHTML = html; updateBatchOperationsVisibility();
 }
 function showDeleteConfirm(id) { currentDeleteId = id; showConfirmDialog('确定要删除这条订单报表吗？此操作将移至回收站。', () => moveToRecycleBin(id), '确认删除'); }
-function hideClearConfirm() { hideConfirmDialog(); }
 async function moveToRecycleBin(id) { const idx = historyRecords.findIndex(r => r.id === id); if (idx === -1) return; const [rec] = historyRecords.splice(idx, 1); rec.deletedAt = new Date().toISOString(); try { await saveToDatabase(RECYCLE_STORE_NAME, rec); await deleteFromDatabase(STORE_NAME, id); recycleBin.unshift(rec); selectedHistoryIds.delete(id); updateSummaryCache(); updateHistoryDisplay(); updateUserCardsDisplay(); updateSummaryDisplay(); updateMyAccountCards(); updateRecycleBadge(); try { populateFilterOptions(); } catch(e) {} updateStorageIndicator(); showToast('已移至回收站', 'warning'); } catch(e) { showToast('移至回收站失败', 'error'); } }
 async function restoreFromRecycleBin(id) { const idx = recycleBin.findIndex(r => r.id === id); if (idx === -1) return; const [rec] = recycleBin.splice(idx, 1); delete rec.deletedAt; try { await saveToDatabase(STORE_NAME, rec); await deleteFromDatabase(RECYCLE_STORE_NAME, id); historyRecords.unshift(rec); selectedRecycleIds.delete(id); updateSummaryCache(); updateHistoryDisplay(); updateUserCardsDisplay(); updateSummaryDisplay(); updateMyAccountCards(); updateRecycleBadge(); try { populateFilterOptions(); } catch(e) {} toggleRecyclePanel(); updateStorageIndicator(); showToast('已恢复至原位置', 'success'); } catch(e) { showToast('恢复失败', 'error'); } }
 async function deletePermanently(id) { try { await deleteFromDatabase(RECYCLE_STORE_NAME, id); recycleBin = recycleBin.filter(r => r.id !== id); selectedRecycleIds.delete(id); updateRecycleBadge(); renderRecycleItems(); updateBatchOperationsVisibility(); updateStorageIndicator(); showToast('已永久删除', 'error'); } catch(e) { showToast('永久删除失败', 'error'); } }
@@ -903,7 +898,6 @@ function getCurrentDate() { return document.getElementById('dateFilter').value |
 function loadTable1Data() {
     const key = 'paymentTable1Data_' + getCurrentDate();
     paymentTable1Data = JSON.parse(localStorage.getItem(key) || '[]');
-    // 合并全局累计列
     paymentTable1Data = paymentTable1Data.map((row, i) => {
         const acc = globalAccumulate.find(a => a.index === i);
         if (acc) row.accumulate = acc.accumulate;
