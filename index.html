@@ -26,6 +26,7 @@ setInterval(() => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>订单报表系统（赔付明细整数显示版）- 大容量储存版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #e8ecf1; color: #333; min-height: 100vh; padding: 0; display: block; }
@@ -111,6 +112,8 @@ setInterval(() => {
         .history-time { font-size: 0.75rem; opacity: 0.85; }
         .delete-btn { background: rgba(231,76,60,0.3); color: white; border: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
         .delete-btn:hover { background: rgba(231,76,60,0.8); transform: scale(1.1); }
+        .screenshot-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; }
+        .screenshot-btn:hover { background: rgba(255,255,255,0.4); }
         .history-body { padding: 12px; }
         .history-content { font-size: 0.85rem; line-height: 1.5; min-width: 0; }
         .compensation-card { background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 10px; margin-top: 8px; border: 1px solid #e1e8f0; }
@@ -303,6 +306,7 @@ setInterval(() => {
     </style>
 </head>
 <body>
+<!-- 登录覆盖层 -->
 <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
         <h2><i class="fas fa-lock"></i> 系统访问受限</h2>
@@ -312,6 +316,7 @@ setInterval(() => {
         <button class="login-btn" onclick="checkAccessPassword()">进入系统</button>
     </div>
 </div>
+<!-- 密码弹窗 -->
 <div class="password-dialog" id="passwordDialog">
     <div class="password-content">
         <h3><i class="fas fa-shield-alt"></i> 操作需要密码验证</h3>
@@ -322,6 +327,7 @@ setInterval(() => {
         <button class="password-btn password-cancel" onclick="closePasswordDialog()">取消</button>
     </div>
 </div>
+<!-- 格式选择器 -->
 <div class="format-selector" id="formatSelector">
     <div class="format-content">
         <h3><i class="fas fa-file-export"></i> 选择导出格式</h3>
@@ -336,6 +342,7 @@ setInterval(() => {
         </div>
     </div>
 </div>
+<!-- 导入预览弹窗 -->
 <div class="import-preview-dialog" id="importPreviewDialog">
     <div class="import-preview-content">
         <div class="import-preview-header"><h3 class="import-preview-title"><i class="fas fa-file-import"></i> 导入订单预览</h3><button class="close-preview-btn" onclick="closeImportPreview()">&times;</button></div>
@@ -344,13 +351,16 @@ setInterval(() => {
         <div class="import-preview-buttons"><button class="btn btn-primary" onclick="confirmImport()"><i class="fas fa-check"></i> 确认导入</button><button class="btn btn-secondary" onclick="closeImportPreview()"><i class="fas fa-times"></i> 取消</button></div>
     </div>
 </div>
+<!-- Toast 容器 -->
 <div class="toast-container" id="toastContainer"></div>
+<!-- 存储指示器 -->
 <div class="storage-indicator" id="storageIndicator">
     <div class="storage-row"><span class="storage-label">今日数量:</span><span class="storage-value" id="storageTodayCount">0</span></div>
     <div class="storage-row"><span class="storage-label">全部数量:</span><span class="storage-value" id="storageTotalCount">0</span></div>
     <div class="storage-row"><span class="storage-label">已用空间:</span><span class="storage-value" id="storageUsed">0KB</span></div>
     <div class="storage-row"><span class="storage-label">剩余空间:</span><span class="storage-value" id="storageFree">50MB</span></div>
 </div>
+<!-- 收付弹窗 -->
 <div class="payment-dialog" id="paymentDialog">
     <div class="payment-dialog-header" id="paymentDialogHeader">
         <h3><i class="fas fa-hand-holding-usd"></i> 收付管理</h3>
@@ -374,6 +384,7 @@ setInterval(() => {
     </div>
     <div class="resize-handle" id="resizeHandle"></div>
 </div>
+<!-- 导航栏 -->
 <div class="navbar" id="mainNavbar" style="display: none;">
     <div class="navbar-brand"><i class="fas fa-file-invoice-dollar"></i><span>订单报表系统</span></div>
     <div class="nav-buttons">
@@ -386,6 +397,7 @@ setInterval(() => {
         <button class="nav-btn" onclick="requestClearPassword()"><i class="fas fa-trash-alt"></i> 清空</button>
     </div>
 </div>
+<!-- 主容器 -->
 <div class="container" id="mainContainer" style="display: none;">
     <div class="main-content">
         <div class="input-section">
@@ -439,12 +451,15 @@ setInterval(() => {
         <div class="big-user-card"><div class="big-card-header"><i class="fas fa-calculator"></i> 我的账户</div><div class="big-card-content"><div class="my-account-container" id="myAccountContainer"><div class="empty-history"><i class="fas fa-coins" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i><p>暂无账户数据</p></div></div></div></div>
     </div>
 </div>
+<!-- 回收站侧边栏 -->
 <div class="recycle-panel" id="recyclePanel">
     <div class="recycle-panel-header"><h3><i class="fas fa-trash-restore"></i> 回收站</h3><button class="close-recycle-panel" onclick="toggleRecyclePanel()"><i class="fas fa-times"></i></button></div>
     <div class="batch-operations" id="recycleBatchOperations"><span class="batch-info">已选择 <span id="recycleSelectedCount">0</span> 项</span><input type="checkbox" class="select-all-checkbox" id="selectAllRecycle" onchange="toggleSelectAll('recycle')"><label for="selectAllRecycle">全选</label><button class="btn btn-secondary" onclick="batchRestore('recycle')"><i class="fas fa-undo"></i> 批量恢复</button><button class="btn btn-danger" onclick="batchDeletePermanent('recycle')"><i class="fas fa-trash"></i> 批量永久删除</button></div>
     <div id="recycleItemsContainer"><div class="empty-history"><i class="fas fa-trash" style="font-size: 2rem; margin-bottom: 10px; color: #bdc3c7;"></i><p>回收站为空</p></div></div>
 </div>
+<!-- 文件选择器 -->
 <input type="file" id="fileInput" class="file-input" accept=".txt,.csv,.json" onchange="importData(event)">
+<!-- 通用确认弹窗 -->
 <div class="confirm-dialog" id="confirmDialog">
     <div class="confirm-content">
         <h3 id="confirmTitle">确认删除</h3>
@@ -455,9 +470,11 @@ setInterval(() => {
         </div>
     </div>
 </div>
+<!-- 重复录入弹窗 -->
 <div class="confirm-dialog" id="duplicateDialog">
     <div class="confirm-content"><h3>发现重复录入</h3><p id="duplicateMessage">检测到相同日期、相同申报人的相似订单记录。</p><div class="confirm-buttons"><button class="confirm-btn confirm-yes" onclick="forceSaveRecord()"><i class="fas fa-save"></i> 强制保存</button><button class="confirm-btn confirm-cancel" onclick="hideDuplicateDialog()"><i class="fas fa-edit"></i> 修改后再存</button><button class="confirm-btn confirm-no" onclick="hideDuplicateDialog()"><i class="fas fa-times"></i> 取消保存</button></div></div>
 </div>
+<!-- 主体脚本 -->
 <script>
 function getPeriodFromDate(dateStr) {
     const date = new Date(dateStr);
@@ -741,8 +758,58 @@ function updateHistoryDisplay() {
     let records = getHistoryFilteredRecords(); if (filterUser) records = records.filter(r => r.applicant === filterUser);
     counter.textContent = records.length;
     if (records.length === 0) { container.innerHTML = `<div class="empty-history"><i class="fas fa-clock" style="font-size: 2.5rem; margin-bottom: 10px; color: #bdc3c7;"></i><p>暂无记录</p></div>`; return; }
-    let html = ''; records.forEach((r, i) => { const sel = selectedHistoryIds.has(r.id); html += `<div class="history-card" data-id="${r.id}"><div class="history-card-select"><input type="checkbox" class="history-checkbox" ${sel?'checked':''} onchange="toggleHistorySelection(${r.id},this.checked)"></div><div class="history-header"><div><span class="category-tag highlight-applicant"><i class="fas fa-user"></i> ${r.applicant}</span><span>订单报表 #${i+1}</span><span class="category-tag ${getCategoryClass(r.category)} highlight-category">${r.category}</span></div><div style="display:flex;align-items:center;gap:8px;"><span class="history-time">${r.timestamp}</span><button class="delete-btn" onclick="showDeleteConfirm(${r.id})"><i class="fas fa-trash"></i></button></div></div><div class="history-body"><div class="history-content">${r.tableHTML}${r.compensationCardHTML}</div></div></div>`; });
-    container.innerHTML = html; updateBatchOperationsVisibility();
+    let html = '';
+    records.forEach((r, i) => {
+        const sel = selectedHistoryIds.has(r.id);
+        const cardId = 'historycard-' + r.id;
+        html += `<div class="history-card" data-id="${r.id}" id="${cardId}">
+            <div class="history-card-select"><input type="checkbox" class="history-checkbox" ${sel?'checked':''} onchange="toggleHistorySelection(${r.id},this.checked)"></div>
+            <div class="history-header">
+                <div>
+                    <span class="category-tag highlight-applicant"><i class="fas fa-user"></i> ${r.applicant}</span>
+                    <span>订单报表 #${i+1}</span>
+                    <span class="category-tag ${getCategoryClass(r.category)} highlight-category">${r.category}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="history-time">${r.timestamp}</span>
+                    <button class="screenshot-btn" onclick="screenshotHistoryCard('${cardId}')" title="截图复制到剪贴板">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <button class="delete-btn" onclick="showDeleteConfirm(${r.id})"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            <div class="history-body"><div class="history-content">${r.tableHTML}${r.compensationCardHTML}</div></div>
+        </div>`;
+    });
+    container.innerHTML = html;
+    updateBatchOperationsVisibility();
+}
+function screenshotHistoryCard(cardId) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    html2canvas(card, {
+        backgroundColor: '#ffffff',
+        scale: 2
+    }).then(canvas => {
+        canvas.toBlob(blob => {
+            if (!blob) { showToast('截图生成失败', 'error'); return; }
+            try {
+                navigator.clipboard.write([
+                    new ClipboardItem({
+                        'image/png': blob
+                    })
+                ]).then(() => {
+                    showToast('已复制到剪贴板', 'success');
+                }).catch(() => {
+                    showToast('复制失败，请重试', 'error');
+                });
+            } catch (err) {
+                showToast('复制失败，您的浏览器可能不支持此功能', 'error');
+            }
+        }, 'image/png');
+    }).catch(err => {
+        showToast('截图失败，请重试', 'error');
+    });
 }
 function showDeleteConfirm(id) { currentDeleteId = id; showConfirmDialog('确定要删除这条订单报表吗？此操作将移至回收站。', () => moveToRecycleBin(id), '确认删除'); }
 async function moveToRecycleBin(id) { const idx = historyRecords.findIndex(r => r.id === id); if (idx === -1) return; const [rec] = historyRecords.splice(idx, 1); rec.deletedAt = new Date().toISOString(); try { await saveToDatabase(RECYCLE_STORE_NAME, rec); await deleteFromDatabase(STORE_NAME, id); recycleBin.unshift(rec); selectedHistoryIds.delete(id); updateSummaryCache(); updateHistoryDisplay(); updateUserCardsDisplay(); updateSummaryDisplay(); updateMyAccountCards(); updateRecycleBadge(); try { populateFilterOptions(); } catch(e) {} updateStorageIndicator(); showToast('已移至回收站', 'warning'); } catch(e) { showToast('移至回收站失败', 'error'); } }
@@ -755,46 +822,10 @@ function toggleHistorySelection(id, sel) { sel ? selectedHistoryIds.add(id) : se
 function toggleRecycleSelection(id, sel) { sel ? selectedRecycleIds.add(id) : selectedRecycleIds.delete(id); updateBatchOperationsVisibility(); }
 function toggleSelectAll(type) { if (type === 'history') { const chk = document.getElementById('selectAllHistory').checked; document.querySelectorAll('.history-checkbox').forEach(cb => { cb.checked = chk; toggleHistorySelection(parseInt(cb.closest('.history-card').dataset.id), chk); }); } else if (type === 'recycle') { const chk = document.getElementById('selectAllRecycle').checked; document.querySelectorAll('.recycle-checkbox').forEach(cb => { cb.checked = chk; toggleRecycleSelection(parseInt(cb.closest('.recycle-item').dataset.id), chk); }); } }
 function updateBatchOperationsVisibility() { const histOps = document.getElementById('historyBatchOperations'), recOps = document.getElementById('recycleBatchOperations'), histSel = document.getElementById('selectedCount'), recSel = document.getElementById('recycleSelectedCount'); histOps.classList.toggle('show', selectedHistoryIds.size > 0); histSel.textContent = selectedHistoryIds.size; recOps.classList.toggle('show', selectedRecycleIds.size > 0); recSel.textContent = selectedRecycleIds.size; const histChk = document.getElementById('selectAllHistory'); if (histChk) histChk.checked = selectedHistoryIds.size === historyRecords.length && historyRecords.length > 0; const recChk = document.getElementById('selectAllRecycle'); if (recChk) recChk.checked = selectedRecycleIds.size === recycleBin.length && recycleBin.length > 0; }
-function batchDelete(type) {
-    if (type === 'history' && selectedHistoryIds.size > 0) {
-        showConfirmDialog(`确定删除选中的 ${selectedHistoryIds.size} 条记录吗？`, async () => {
-            const ids = [...selectedHistoryIds];
-            for (const id of ids) await moveToRecycleBin(id);
-            selectedHistoryIds.clear();
-            updateBatchOperationsVisibility();
-        }, '确认删除');
-    }
-}
-function batchMoveToRecycle(type) {
-    if (type === 'history' && selectedHistoryIds.size > 0) {
-        showConfirmDialog(`确定将选中的 ${selectedHistoryIds.size} 条记录移至回收站吗？`, async () => {
-            const ids = [...selectedHistoryIds];
-            for (const id of ids) await moveToRecycleBin(id);
-            selectedHistoryIds.clear();
-            updateBatchOperationsVisibility();
-        }, '确认移动');
-    }
-}
-function batchRestore(type) {
-    if (type === 'recycle' && selectedRecycleIds.size > 0) {
-        showConfirmDialog(`确定恢复选中的 ${selectedRecycleIds.size} 条记录吗？`, async () => {
-            const ids = [...selectedRecycleIds];
-            for (const id of ids) await restoreFromRecycleBin(id);
-            selectedRecycleIds.clear();
-            updateBatchOperationsVisibility();
-        }, '确认恢复');
-    }
-}
-function batchDeletePermanent(type) {
-    if (type === 'recycle' && selectedRecycleIds.size > 0) {
-        showConfirmDialog(`确定永久删除选中的 ${selectedRecycleIds.size} 条记录吗？`, async () => {
-            const ids = [...selectedRecycleIds];
-            for (const id of ids) await deletePermanently(id);
-            selectedRecycleIds.clear();
-            updateBatchOperationsVisibility();
-        }, '确认删除');
-    }
-}
+function batchDelete(type) { if (type === 'history' && selectedHistoryIds.size > 0) { showConfirmDialog(`确定删除选中的 ${selectedHistoryIds.size} 条记录吗？`, async () => { const ids = [...selectedHistoryIds]; for (const id of ids) await moveToRecycleBin(id); selectedHistoryIds.clear(); updateBatchOperationsVisibility(); }, '确认删除'); } }
+function batchMoveToRecycle(type) { if (type === 'history' && selectedHistoryIds.size > 0) { showConfirmDialog(`确定将选中的 ${selectedHistoryIds.size} 条记录移至回收站吗？`, async () => { const ids = [...selectedHistoryIds]; for (const id of ids) await moveToRecycleBin(id); selectedHistoryIds.clear(); updateBatchOperationsVisibility(); }, '确认移动'); } }
+function batchRestore(type) { if (type === 'recycle' && selectedRecycleIds.size > 0) { showConfirmDialog(`确定恢复选中的 ${selectedRecycleIds.size} 条记录吗？`, async () => { const ids = [...selectedRecycleIds]; for (const id of ids) await restoreFromRecycleBin(id); selectedRecycleIds.clear(); updateBatchOperationsVisibility(); }, '确认恢复'); } }
+function batchDeletePermanent(type) { if (type === 'recycle' && selectedRecycleIds.size > 0) { showConfirmDialog(`确定永久删除选中的 ${selectedRecycleIds.size} 条记录吗？`, async () => { const ids = [...selectedRecycleIds]; for (const id of ids) await deletePermanently(id); selectedRecycleIds.clear(); updateBatchOperationsVisibility(); }, '确认删除'); } }
 function updateUserCardsDisplay() {
     const container = document.getElementById('userCardsContainer');
     const records = getFilteredRecords();
@@ -890,7 +921,8 @@ function applyFilters() { if (daysFilterActive && daysForwardValue !== null) upd
 document.getElementById('historyUserFilter').addEventListener('change', updateHistoryDisplay);
 document.getElementById('accessPassword').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAccessPassword(); });
 document.getElementById('operationPassword').addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyOperationPassword(); });
-/* ========== 收付弹窗功能 ========== */
+
+/* ========== 收付弹窗功能（保持完整） ========== */
 let paymentTable1Data = [];
 let paymentTable2Rows = JSON.parse(localStorage.getItem('paymentTable2Data') || '[]');
 let globalAccumulate = JSON.parse(localStorage.getItem('paymentTable1AccumulateGlobal') || '[]');
