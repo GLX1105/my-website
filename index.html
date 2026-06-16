@@ -1,25 +1,4 @@
 <!DOCTYPE html>
-<script>
-const allowHost = "glx1105.github.io";
-if (location.host !== allowHost) {
-  document.documentElement.innerHTML = "<h1>未授权站点</h1>";
-  throw new Error("Unauthorized");
-}
-let devtools = { open: false };
-setInterval(() => {
-  const before = new Date().getTime();
-  debugger;
-  const after = new Date().getTime();
-  if (after - before > 100) { devtools.open = true; }
-}, 100);
-setInterval(() => {
-  if (devtools.open) {
-    document.body.innerHTML = "<h1>检测到非法调试</h1>";
-    throw new Error("DevTools detected");
-  }
-}, 500);
-</script>
-<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -302,7 +281,7 @@ setInterval(() => {
         .profit-color-negative { color: #e74c3c; }
         .btn-small { padding: 3px 8px; font-size: 0.75rem; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; }
         .btn-small:hover { background: #f0f0f0; }
-        .payment-table2 .col-no, .payment-table2 .col-nick, .payment-table2 .col-remark, .payment-table2 .col-user, .payment-table2 .col-profit-auto { width: 70px; }
+        .payment-table2 .col-no, .payment-table2 .col-remark, .payment-table2 .col-user, .payment-table2 .col-profit-auto { width: 70px; }
     </style>
 </head>
 <body>
@@ -922,7 +901,7 @@ document.getElementById('historyUserFilter').addEventListener('change', updateHi
 document.getElementById('accessPassword').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAccessPassword(); });
 document.getElementById('operationPassword').addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyOperationPassword(); });
 
-/* ========== 收付弹窗功能（保持完整） ========== */
+/* ========== 收付弹窗功能 ========== */
 let paymentTable1Data = [];
 let paymentTable2Rows = JSON.parse(localStorage.getItem('paymentTable2Data') || '[]');
 let globalAccumulate = JSON.parse(localStorage.getItem('paymentTable1AccumulateGlobal') || '[]');
@@ -971,10 +950,9 @@ function saveTable2RowsData() {
     const rows = document.querySelectorAll('#table2Body tr');
     const data = Array.from(rows).map((row, i) => {
         const no = row.querySelector('.col-no')?.value || '';
-        const nick = row.querySelector('.col-nick')?.value || '';
         const remark = row.querySelector('.col-remark')?.value || '';
         const locked = row.querySelector('.col-no')?.hasAttribute('readonly') || false;
-        return { index: i, no, nick, remark, locked };
+        return { index: i, no, remark, locked };
     });
     localStorage.setItem('paymentTable2Data', JSON.stringify(data));
     paymentTable2Rows = data;
@@ -1032,14 +1010,14 @@ function initPaymentTables() {
         </tr>`;
     }
     body1.innerHTML = html1;
-    head2.innerHTML = `<tr class="section-title-row"><th colspan="5">用户盈亏明细 <button class="btn-small" id="btnEditTable2" onclick="setTable2Editable()">修改</button> <button class="btn-small" id="btnSaveTable2" onclick="saveTable2Data()">保存</button></th></tr>
-        <tr><th>编号</th><th>昵称</th><th>备注</th><th>用户</th><th>盈亏</th></tr>`;
+    // 表2：删除了昵称列，只保留编号、备注、用户、盈亏
+    head2.innerHTML = `<tr class="section-title-row"><th colspan="4">用户盈亏明细 <button class="btn-small" id="btnEditTable2" onclick="setTable2Editable()">修改</button> <button class="btn-small" id="btnSaveTable2" onclick="saveTable2Data()">保存</button></th></tr>
+        <tr><th>编号</th><th>备注</th><th>用户</th><th>盈亏</th></tr>`;
     let html2 = '';
     let remainingIdx = 0;
     for (let i = 0; i < 118; i++) {
         const saved = paymentTable2Rows.find(r => r.index === i) || {};
         const noVal = saved.no || '';
-        const nickVal = saved.nick || '';
         const remarkVal = saved.remark || '';
         const locked = saved.locked || false;
         let user = '', profit = '';
@@ -1056,7 +1034,6 @@ function initPaymentTables() {
         }
         html2 += `<tr>
             <td><input type="text" class="col-no" value="${escapeHtml(noVal)}" oninput="onTable2InputChange(this)" ${locked ? 'readonly' : ''}></td>
-            <td><input type="text" class="col-nick" value="${escapeHtml(nickVal)}" oninput="onTable2InputChange(this)" ${locked ? 'readonly' : ''}></td>
             <td><input type="text" class="col-remark" value="${escapeHtml(remarkVal)}" oninput="onTable2RemarkChange(this)" ${locked ? 'readonly' : ''}></td>
             <td class="col-user">${escapeHtml(user)}</td>
             <td class="col-profit-auto">${profit !== '' ? '<span class="' + (profit >= 0 ? 'profit-color-positive' : 'profit-color-negative') + '">' + profit + '</span>' : ''}</td>
@@ -1079,6 +1056,13 @@ function refreshTable1ProfitFromTable2() {
         for (const row2 of rows2) {
             const noInput = row2.querySelector('.col-no');
             if (noInput && noInput.value.trim() === val) {
+                // 把表2的备注填入表1的昵称
+                const remarkInput = row2.querySelector('.col-remark');
+                if (remarkInput) {
+                    const nickInput = row1.querySelector('.col-nick');
+                    if (nickInput) nickInput.value = remarkInput.value;
+                }
+                // 把表2的盈亏填入表1的盈亏
                 const profitCell = row2.querySelector('.col-profit-auto');
                 if (profitCell) {
                     const span = profitCell.querySelector('span');
@@ -1207,8 +1191,10 @@ function handleTable1IndexChange(input) {
     for (const r2 of rows2) {
         const noInput = r2.querySelector('.col-no');
         if (noInput && noInput.value.trim() === val) {
-            const nick2 = r2.querySelector('.col-nick');
-            if (nick2) nickInput.value = nick2.value;
+            // 把表2的备注填入表1的昵称
+            const remarkInput = r2.querySelector('.col-remark');
+            if (remarkInput) nickInput.value = remarkInput.value;
+            // 把表2的盈亏填入表1的盈亏
             const profitCell = r2.querySelector('.col-profit-auto');
             if (profitCell) {
                 const span = profitCell.querySelector('span');
@@ -1294,18 +1280,39 @@ function onTable2RemarkChange(input) {
         if (userCell) userCell.textContent = user;
         if (profitCell) profitCell.innerHTML = profit !== '' ? `<span class="${profit >= 0 ? 'profit-color-positive' : 'profit-color-negative'}">${profit}</span>` : '';
     });
+    // 同时刷新表1中对应序号的昵称和盈亏
+    const noVal = row.querySelector('.col-no')?.value.trim() || '';
+    if (noVal) {
+        const rows1 = document.querySelectorAll('#table1Body tr');
+        rows1.forEach(r1 => {
+            const idxInput = r1.querySelector('.col-index');
+            if (idxInput && idxInput.value.trim() === noVal) {
+                const nickInput = r1.querySelector('.col-nick');
+                if (nickInput) nickInput.value = remark;
+                const profitCell = r1.querySelector('.col-profit-auto');
+                // 这里需要获取当前行的盈亏
+                const currentProfitCell = row.querySelector('.col-profit-auto span');
+                if (currentProfitCell) {
+                    const profitInput = r1.querySelector('.col-profit');
+                    if (profitInput) {
+                        profitInput.value = currentProfitCell.textContent.trim();
+                        updateProfitColor(profitInput);
+                        updateRowCalculations(r1);
+                    }
+                }
+            }
+        });
+    }
 }
 function saveTable2Data() {
     const rows = document.querySelectorAll('#table2Body tr');
     let anyFilled = false;
     rows.forEach(row => {
         const no = row.querySelector('.col-no').value.trim();
-        const nick = row.querySelector('.col-nick').value.trim();
         const remark = row.querySelector('.col-remark').value.trim();
-        if (no || nick || remark) {
+        if (no || remark) {
             anyFilled = true;
             row.querySelector('.col-no').setAttribute('readonly', 'readonly');
-            row.querySelector('.col-nick').setAttribute('readonly', 'readonly');
             row.querySelector('.col-remark').setAttribute('readonly', 'readonly');
         }
     });
@@ -1316,7 +1323,7 @@ function saveTable2Data() {
 }
 function setTable2Editable() {
     const rows = document.querySelectorAll('#table2Body tr');
-    rows.forEach(row => { row.querySelector('.col-no').removeAttribute('readonly'); row.querySelector('.col-nick').removeAttribute('readonly'); row.querySelector('.col-remark').removeAttribute('readonly'); });
+    rows.forEach(row => { row.querySelector('.col-no').removeAttribute('readonly'); row.querySelector('.col-remark').removeAttribute('readonly'); });
     paymentTable2Rows = paymentTable2Rows.map(r => ({ ...r, locked: false }));
     saveTable2RowsData();
     updateTableButtons();
