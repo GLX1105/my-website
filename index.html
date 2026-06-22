@@ -282,6 +282,7 @@
         .btn-small { padding: 3px 8px; font-size: 0.75rem; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; }
         .btn-small:hover { background: #f0f0f0; }
         .payment-table2 .col-no, .payment-table2 .col-remark, .payment-table2 .col-user, .payment-table2 .col-profit-auto { width: 70px; }
+        .payment-table2 th, .payment-table2 td { white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -1010,7 +1011,6 @@ function initPaymentTables() {
         </tr>`;
     }
     body1.innerHTML = html1;
-    // 表2：已删除昵称列，只保留编号、备注、用户、盈亏
     head2.innerHTML = `<tr class="section-title-row"><th colspan="4">用户盈亏明细 <button class="btn-small" id="btnEditTable2" onclick="setTable2Editable()">修改</button> <button class="btn-small" id="btnSaveTable2" onclick="saveTable2Data()">保存</button></th></tr>
         <tr><th>编号</th><th>备注</th><th>用户</th><th>盈亏</th></tr>`;
     let html2 = '';
@@ -1056,13 +1056,11 @@ function refreshTable1ProfitFromTable2() {
         for (const row2 of rows2) {
             const noInput = row2.querySelector('.col-no');
             if (noInput && noInput.value.trim() === val) {
-                // 把表2的备注填入表1的昵称
                 const remarkInput = row2.querySelector('.col-remark');
                 if (remarkInput) {
                     const nickInput = row1.querySelector('.col-nick');
                     if (nickInput) nickInput.value = remarkInput.value;
                 }
-                // 把表2的盈亏填入表1的盈亏
                 const profitCell = row2.querySelector('.col-profit-auto');
                 if (profitCell) {
                     const span = profitCell.querySelector('span');
@@ -1194,10 +1192,8 @@ function handleTable1IndexChange(input) {
     for (const r2 of rows2) {
         const noInput = r2.querySelector('.col-no');
         if (noInput && noInput.value.trim() === val) {
-            // 把表2的备注填入表1的昵称
             const remarkInput = r2.querySelector('.col-remark');
             if (remarkInput) nickInput.value = remarkInput.value;
-            // 把表2的盈亏填入表1的盈亏
             const profitCell = r2.querySelector('.col-profit-auto');
             if (profitCell) {
                 const span = profitCell.querySelector('span');
@@ -1283,7 +1279,6 @@ function onTable2RemarkChange(input) {
         if (userCell) userCell.textContent = user;
         if (profitCell) profitCell.innerHTML = profit !== '' ? `<span class="${profit >= 0 ? 'profit-color-positive' : 'profit-color-negative'}">${profit}</span>` : '';
     });
-    // 同时刷新表1中对应序号的昵称和盈亏
     const noVal = row.querySelector('.col-no')?.value.trim() || '';
     if (noVal) {
         const rows1 = document.querySelectorAll('#table1Body tr');
