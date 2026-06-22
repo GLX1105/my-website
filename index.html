@@ -982,32 +982,51 @@ resizeHandle.addEventListener('mousedown', (e) => { if (window.innerWidth <= 768
 document.addEventListener('mousemove', (e) => { if (!isResizing) return; dialogElement.style.width = Math.max(400, initialWidth + e.clientX - resizeStartX) + 'px'; dialogElement.style.height = Math.max(300, initialHeight + e.clientY - resizeStartY) + 'px'; });
 document.addEventListener('mouseup', () => { isResizing = false; });
 
-// 通用回车跳下一行函数
-function handleEnterNextRow(input, colClass) {
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const currentRow = input.closest('tr');
-            const nextRow = currentRow.nextElementSibling;
-            if (nextRow) {
-                const nextInput = nextRow.querySelector(colClass);
-                if (nextInput) { nextInput.focus(); nextInput.select(); }
-            }
+// 通用回车跳下一行函数 - 事件委托方式
+function setupTableEnterNavigation() {
+    const table1Body = document.getElementById('table1Body');
+    const table2Body = document.getElementById('table2Body');
+
+    if (table1Body._enterBound) return;
+    table1Body._enterBound = true;
+
+    table1Body.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        const target = e.target;
+        if (target.tagName !== 'INPUT') return;
+        if (target.classList.contains('col-total') || target.classList.contains('col-balance')) return;
+        if (target.classList.contains('col-receive-pay')) return;
+        if (target.hasAttribute('readonly')) return;
+        e.preventDefault();
+        const currentRow = target.closest('tr');
+        const nextRow = currentRow.nextElementSibling;
+        if (!nextRow) return;
+        const colClass = Array.from(target.classList).find(c => c.startsWith('col-'));
+        if (!colClass) return;
+        const nextInput = nextRow.querySelector('.' + colClass);
+        if (nextInput && !nextInput.hasAttribute('readonly')) {
+            nextInput.focus();
+            nextInput.select();
         }
     });
-}
 
-// 给所有可编辑的input绑定回车事件
-function bindTableEnterEvents() {
-    // 表1：序号、昵称、盈亏、累计
-    document.querySelectorAll('#table1Body .col-index').forEach(inp => handleEnterNextRow(inp, '.col-index'));
-    document.querySelectorAll('#table1Body .col-nick').forEach(inp => handleEnterNextRow(inp, '.col-nick'));
-    document.querySelectorAll('#table1Body .col-profit').forEach(inp => handleEnterNextRow(inp, '.col-profit'));
-    document.querySelectorAll('#table1Body .col-accumulate').forEach(inp => handleEnterNextRow(inp, '.col-accumulate'));
-
-    // 表2：编号、备注
-    document.querySelectorAll('#table2Body .col-no').forEach(inp => handleEnterNextRow(inp, '.col-no'));
-    document.querySelectorAll('#table2Body .col-remark').forEach(inp => handleEnterNextRow(inp, '.col-remark'));
+    table2Body.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        const target = e.target;
+        if (target.tagName !== 'INPUT') return;
+        if (target.hasAttribute('readonly')) return;
+        e.preventDefault();
+        const currentRow = target.closest('tr');
+        const nextRow = currentRow.nextElementSibling;
+        if (!nextRow) return;
+        const colClass = Array.from(target.classList).find(c => c.startsWith('col-'));
+        if (!colClass) return;
+        const nextInput = nextRow.querySelector('.' + colClass);
+        if (nextInput && !nextInput.hasAttribute('readonly')) {
+            nextInput.focus();
+            nextInput.select();
+        }
+    });
 }
 
 function initPaymentTables() {
@@ -1072,7 +1091,9 @@ function initPaymentTables() {
         </tr>`;
     }
     body2.innerHTML = html2;
-    bindTableEnterEvents();
+    table1Body._enterBound = false;
+    table2Body._enterBound = false;
+    setupTableEnterNavigation();
     refreshTable1ProfitFromTable2();
     document.querySelectorAll('#table1Body tr').forEach(row => updateRowCalculations(row));
     document.querySelectorAll('#table1Body .col-profit, #table1Body .col-accumulate').forEach(inp => updateProfitColor(inp));
@@ -1281,7 +1302,6 @@ function setTable1Editable() {
     });
     paymentTable1Data = paymentTable1Data.map(r => ({ ...r, locked: false }));
     saveTable1DataToStorage();
-    bindTableEnterEvents();
     updateTableButtons();
 }
 function onTable2InputChange(input) {}
@@ -1356,7 +1376,6 @@ function setTable2Editable() {
     rows.forEach(row => { row.querySelector('.col-no').removeAttribute('readonly'); row.querySelector('.col-remark').removeAttribute('readonly'); });
     paymentTable2Rows = paymentTable2Rows.map(r => ({ ...r, locked: false }));
     saveTable2RowsData();
-    bindTableEnterEvents();
     updateTableButtons();
 }
 function updateTableButtons() {
