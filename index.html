@@ -265,7 +265,7 @@
         .payment-dialog-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 10px; }
         .merged-table-wrapper { flex: 1; display: flex; flex-direction: row; gap: 20px; overflow: auto; }
         .payment-table { border-collapse: collapse; font-size: 0.8rem; table-layout: auto; }
-        .payment-table th, .payment-table td { border: 1px solid #d1d5db; padding: 2px 4px; text-align: center; white-space: nowrap; }
+        .payment-table th, .payment-table td { border: 1px solid #d1d5db; padding: 2px 4px; text-align: center; }
         .payment-table th { background: #f1f6fd; font-weight: 600; color: #2c3e50; position: sticky; top: 0; z-index: 2; }
         .payment-table input { border: none; background: transparent; text-align: center; font-size: 0.8rem; padding: 2px; outline: none; min-width: 0; width: 100%; }
         .payment-table input:focus { background: transparent !important; }
@@ -1010,7 +1010,7 @@ function initPaymentTables() {
         </tr>`;
     }
     body1.innerHTML = html1;
-    // 表2：删除了昵称列，只保留编号、备注、用户、盈亏
+    // 表2：已删除昵称列，只保留编号、备注、用户、盈亏
     head2.innerHTML = `<tr class="section-title-row"><th colspan="4">用户盈亏明细 <button class="btn-small" id="btnEditTable2" onclick="setTable2Editable()">修改</button> <button class="btn-small" id="btnSaveTable2" onclick="saveTable2Data()">保存</button></th></tr>
         <tr><th>编号</th><th>备注</th><th>用户</th><th>盈亏</th></tr>`;
     let html2 = '';
@@ -1122,8 +1122,11 @@ function editReceivePay(div) {
     input.value = raw;
     input.className = 'col-receive-pay';
     input.style.width = '100%';
-    input.style.height = '20px';
+    input.style.minHeight = '20px';
     input.style.lineHeight = '20px';
+    input.style.whiteSpace = 'normal';
+    input.style.wordBreak = 'break-all';
+    input.style.overflowWrap = 'break-word';
     input.addEventListener('blur', function() {
         const newRaw = this.value;
         const displayDiv = document.createElement('div');
@@ -1132,7 +1135,7 @@ function editReceivePay(div) {
         displayDiv.innerHTML = formatReceivePay(newRaw);
         displayDiv.onclick = function() { editReceivePay(this); };
         displayDiv.style.width = '100%';
-        displayDiv.style.height = '20px';
+        displayDiv.style.minHeight = '20px';
         displayDiv.style.lineHeight = '20px';
         this.parentNode.replaceChild(displayDiv, this);
         updateRowCalculations(displayDiv.closest('tr'));
@@ -1289,8 +1292,6 @@ function onTable2RemarkChange(input) {
             if (idxInput && idxInput.value.trim() === noVal) {
                 const nickInput = r1.querySelector('.col-nick');
                 if (nickInput) nickInput.value = remark;
-                const profitCell = r1.querySelector('.col-profit-auto');
-                // 这里需要获取当前行的盈亏
                 const currentProfitCell = row.querySelector('.col-profit-auto span');
                 if (currentProfitCell) {
                     const profitInput = r1.querySelector('.col-profit');
